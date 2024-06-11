@@ -3,7 +3,30 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.tutorial.mybatis.mapper.BlogMapper">
-    <select id="selectBlog" resultType="com.tutorial.mybatis.pojo.Blog">
+
+    <resultMap id="BlogResultMap" type="com.tutorial.mybatis.pojo.Blog">
+        <id property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="authorId" column="author_id"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="summary" column="summary"/>
+        <result property="tags" column="tags" typeHandler="com.tutorial.mybatis.handler.StringListTypeHandler"/>
+        <result property="categories" column="categories" typeHandler="com.tutorial.mybatis.handler.StringListTypeHandler"/>
+        <result property="status" column="status"/>
+        <result property="views" column="views"/>
+        <result property="likes" column="likes"/>
+        <result property="commentsCount" column="comments_count"/>
+        <result property="slug" column="slug"/>
+        <result property="metaDescription" column="meta_description"/>
+        <result property="metaKeywords" column="meta_keywords" typeHandler="com.tutorial.mybatis.handler.StringListTypeHandler"/>
+        <result property="featuredImage" column="featured_image"/>
+        <result property="isFeatured" column="is_featured"/>
+        <result property="allowComments" column="allow_comments"/>
+    </resultMap>
+
+    <select id="selectBlog" resultMap="BlogResultMap">
         select * from Blog where id = #{id}
     </select>
 </mapper>

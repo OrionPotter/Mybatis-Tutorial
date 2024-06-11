@@ -227,9 +227,11 @@ mybatis的配置文档的顶层结构如下
 
 ## 属性
 
-属性可以采用外部的配置文件，如jdbc.properties，将外部的配置文件引入后，可以在整个mybatis-config.xml配置文件中引用：
+属性可以采用外部的配置文件，如jdbc.properties，将外部的配置文件引入后，可以在整个mybatis-config.xml配置文件中引用，也可以在构建`sqlSessionFactory`的时候传入自定义的配置的properties
 
-**jdbc.properties**
+### 加载外部配置文件
+
+**外部配置文件jdbc.properties**
 
 ```properties
 driver=com.mysql.cj.jdbc.Driver
@@ -238,55 +240,606 @@ username=root
 password=123456
 ```
 
-**mybatis-config.xml**
+**mybatis-config.xml引用属性**
 
 ```xml
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE configuration
-        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
-        "https://mybatis.org/dtd/mybatis-3-config.dtd">
-<configuration>
-	<!-- 引入外部配置文件 -->
-    <properties resource="./jdbc.properties"></properties>
-
-    <settings>
-        <setting name="logImpl" value="SLF4J"/>
-    </settings>
-
-    <environments default="development">
-        <environment id="development">
-            <transactionManager type="JDBC"/>
-            <dataSource type="POOLED">
-                <property name="driver" value="${driver}"/>
-                <property name="url" value="${url}"/>
-                <property name="username" value="${username}"/>
-                <property name="password" value="${password}"/>
-            </dataSource>
-        </environment>
-    </environments>
-    <mappers>
-        <mapper resource="com.tutorial.mybatis.mapper/BlogMapper.xml"/>
-    </mappers>
-</configuration>
+<dataSource type="POOLED">
+	<property name="driver" value="${driver}"/>
+    <property name="url" value="${url}"/>
+    <property name="username" value="${username}"/>
+    <property name="password" value="${password}"/>
+</dataSource>
 ```
 
+### 构建SqlSessionFactor加载属性
 
+```java
+String resource = "mybatis-config.xml";
+InputStream inputStream = Resources.getResourceAsStream(resource);
+//自定义配置properties
+Properties props = new Properties();
+props.setProperty("driver", "com.mysql.cj.jdbc.Driver");
+props.setProperty("url", "jdbc:mysql://localhost:3306/mybatis_tutorial?serverTimezone=Asia/Shanghai");
+props.setProperty("username", "root");
+props.setProperty("password", "123456");
+SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream, props);
+```
+
+### 属性优先级
+
+构建SqlSessionFactor加载属性 > 加载外部配置文件 > 在properties元素体内指定的属性
 
 ## 设置
 
+```xml
+<settings>
+  <!-- 启用或禁用二级缓存 -->
+  <setting name="cacheEnabled" value="true"/>
+  
+  <!-- 启用或禁用延迟加载 -->
+  <setting name="lazyLoadingEnabled" value="true"/>
+  
+  <!-- 启用或禁用激进的延迟加载 -->
+  <setting name="aggressiveLazyLoading" value="true"/>
+  
+  <!-- 启用或禁用多结果集支持 -->
+  <setting name="multipleResultSetsEnabled" value="true"/>
+  
+  <!-- 使用列标签代替列名 -->
+  <setting name="useColumnLabel" value="true"/>
+  
+  <!-- 启用或禁用 JDBC 生成的键 -->
+  <setting name="useGeneratedKeys" value="false"/>
+  
+  <!-- 自动映射行为，PARTIAL 表示部分映射 -->
+  <setting name="autoMappingBehavior" value="PARTIAL"/>
+  
+  <!-- 未知列的自动映射行为，WARNING 表示警告 -->
+  <setting name="autoMappingUnknownColumnBehavior" value="WARNING"/>
+  
+  <!-- 默认的执行器类型，SIMPLE 表示简单执行器 -->
+  <setting name="defaultExecutorType" value="SIMPLE"/>
+  
+  <!-- 默认的语句超时时间（秒） -->
+  <setting name="defaultStatementTimeout" value="25"/>
+  
+  <!-- 默认的获取大小 -->
+  <setting name="defaultFetchSize" value="100"/>
+  
+  <!-- 启用或禁用安全的 RowBounds -->
+  <setting name="safeRowBoundsEnabled" value="false"/>
+  
+  <!-- 启用或禁用安全的结果处理器 -->
+  <setting name="safeResultHandlerEnabled" value="true"/>
+  
+  <!-- 启用或禁用下划线转驼峰命名法 -->
+  <setting name="mapUnderscoreToCamelCase" value="false"/>
+  
+  <!-- 本地缓存范围，SESSION 表示会话级别缓存 -->
+  <setting name="localCacheScope" value="SESSION"/>
+  
+  <!-- 为 NULL 值指定的 JDBC 类型 -->
+  <setting name="jdbcTypeForNull" value="OTHER"/>
+  
+  <!-- 延迟加载触发的方法 -->
+  <setting name="lazyLoadTriggerMethods" value="equals,clone,hashCode,toString"/>
+  
+  <!-- 默认的脚本语言驱动 -->
+  <setting name="defaultScriptingLanguage" value="org.apache.ibatis.scripting.xmltags.XMLLanguageDriver"/>
+  
+  <!-- 默认的枚举类型处理器 -->
+  <setting name="defaultEnumTypeHandler" value="org.apache.ibatis.type.EnumTypeHandler"/>
+  
+  <!-- 启用或禁用在设置 NULL 值时调用 setter 方法 -->
+  <setting name="callSettersOnNulls" value="false"/>
+  
+  <!-- 启用或禁用返回空行的实例 -->
+  <setting name="returnInstanceForEmptyRow" value="false"/>
+  
+  <!-- 日志前缀 -->
+  <setting name="logPrefix" value="exampleLogPreFix_"/>
+  
+  <!-- 日志实现，SLF4J、LOG4J、LOG4J2、JDK_LOGGING、COMMONS_LOGGING、STDOUT_LOGGING、NO_LOGGING -->
+  <setting name="logImpl" value="SLF4J"/>
+  
+  <!-- 代理工厂，CGLIB 或 JAVASSIST -->
+  <setting name="proxyFactory" value="CGLIB"/>
+  
+  <!-- 自定义 VFS 实现 -->
+  <setting name="vfsImpl" value="org.mybatis.example.YourselfVfsImpl"/>
+  
+  <!-- 启用或禁用使用实际的参数名称 -->
+  <setting name="useActualParamName" value="true"/>
+  
+  <!-- 配置工厂类 -->
+  <setting name="configurationFactory" value="org.mybatis.example.ConfigurationFactory"/>
+</settings>
+```
+
 ## 类型别名
+
+类型别名可以给一个java类型设置一个缩写名字，他仅适用于xml配置，主要降低全限定类名的书写。
+
+### 配置文件方式
+
+```xml
+<typeAliases>
+  <typeAlias alias="Author" type="domain.blog.Author"/>
+  <typeAlias alias="Blog" type="domain.blog.Blog"/>
+  <typeAlias alias="Comment" type="domain.blog.Comment"/>
+  <typeAlias alias="Post" type="domain.blog.Post"/>
+  <typeAlias alias="Section" type="domain.blog.Section"/>
+  <typeAlias alias="Tag" type="domain.blog.Tag"/>
+</typeAliases>
+```
+
+### 注解方式
+
+typeAlias指定一个包的时候，默认会采用bean的名字首字母小写
+
+```xml
+<typeAliases>
+  <package name="domain.blog"/>
+</typeAliases>
+```
+
+```java
+@Alias("Author")//不加注解默认是author,加了注解以后就是Author
+public class Author {
+    
+}
+```
 
 ## 类型处理器
 
+MyBatis在设置预处理语句（PreparedStatement）中的参数或从结果集中取出一个值时，都会用类型处理器将获取到的值以合适的方式转换成 Java 类型，LocalDateTime与数据库中DateTime相互对应，mybatis会自动处理，但是有一些，例如：pojo是list,mysql中是varchar()这就要需要设置自定义类型处理来处理了。
+
+### 配置类型处理器
+
+实现 `org.apache.ibatis.type.TypeHandler` 接口或继承一个很便利的类 `org.apache.ibatis.type.BaseTypeHandler`，将它映射到一个 JDBC 类型。
+
+```java
+public class StringListTypeHandler extends BaseTypeHandler<List<String>> {
+
+    @Override
+    public void setNonNullParameter(PreparedStatement ps, int i, List<String> parameter, JdbcType jdbcType) throws SQLException {
+        ps.setString(i, String.join(",", parameter));
+    }
+
+    @Override
+    public List<String> getNullableResult(ResultSet rs, String columnName) throws SQLException {
+        String columnValue = rs.getString(columnName);
+        return columnValue != null ? Arrays.asList(columnValue.split(",")) : null;
+    }
+
+    @Override
+    public List<String> getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
+        String columnValue = rs.getString(columnIndex);
+        return columnValue != null ? Arrays.asList(columnValue.split(",")) : null;
+    }
+
+    @Override
+    public List<String> getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
+        String columnValue = cs.getString(columnIndex);
+        return columnValue != null ? Arrays.asList(columnValue.split(",")) : null;
+    }
+}
+```
+
+### 注册到Mybatis
+
+```xml
+<!-- mybatis-config.xml -->
+<typeHandlers>
+     <typeHandler handler="com.tutorial.mybatis.handler.StringListTypeHandler" javaType="java.util.List"/>
+</typeHandlers>
+```
+
+### 编写映射文件配置
+
+```xml
+<!-- BlogMapper.xml -->
+<mapper namespace="com.tutorial.mybatis.mapper.BlogMapper">
+    <resultMap id="BlogResultMap" type="com.tutorial.mybatis.pojo.Blog">
+        ……
+        <result property="tags" column="tags" typeHandler="com.tutorial.mybatis.handler.StringListTypeHandler"/>
+        <result property="categories" column="categories" typeHandler="com.tutorial.mybatis.handler.StringListTypeHandler"/>
+        ……
+    </resultMap>
+    <select id="selectBlog" resultMap="BlogResultMap">
+        select * from Blog where id = #{id}
+    </select>
+</mapper>
+```
+
 ## 对象工厂
+
+每次 MyBatis 创建结果对象的新实例时，它都会使用一个对象工厂（ObjectFactory）实例来完成实例化工作。 默认的对象工厂需要做的仅仅是实例化目标类，要么通过默认无参构造方法，要么通过存在的参数映射来调用带有参数的构造方法。 如果想覆盖对象工厂的默认行为，可以通过创建自己的对象工厂来实现。比如：
+
+```java
+// ExampleObjectFactory.java
+public class ExampleObjectFactory extends DefaultObjectFactory {
+  @Override
+  public <T> T create(Class<T> type) {
+    return super.create(type);
+  }
+
+  @Override
+  public <T> T create(Class<T> type, List<Class<?>> constructorArgTypes, List<Object> constructorArgs) {
+    return super.create(type, constructorArgTypes, constructorArgs);
+  }
+
+  @Override
+  public void setProperties(Properties properties) {
+    super.setProperties(properties);
+  }
+
+  @Override
+  public <T> boolean isCollection(Class<T> type) {
+    return Collection.class.isAssignableFrom(type);
+  }}
+```
+
+```xml
+<!-- mybatis-config.xml -->
+<objectFactory type="org.mybatis.example.ExampleObjectFactory">
+  <property name="someProperty" value="100"/>
+</objectFactory>
+```
+
+ObjectFactory 接口很简单，它包含两个创建实例用的方法，一个是处理默认无参构造方法的，另外一个是处理带参数的构造方法的。 另外，setProperties 方法可以被用来配置 ObjectFactory，在初始化你的 ObjectFactory 实例后， objectFactory 元素体中定义的属性会被传递给 setProperties 方法。
 
 ## 插件
 
+MyBatis 允许你在映射语句执行过程中的某一点进行拦截调用。默认情况下，MyBatis 允许使用插件来拦截的方法调用包括：
+
+- Executor (update, query, flushStatements, commit, rollback, getTransaction, close, isClosed)
+- ParameterHandler (getParameterObject, setParameters)
+- ResultSetHandler (handleResultSets, handleOutputParameters)
+- StatementHandler (prepare, parameterize, batch, update, query)
+
+这些类中方法的细节可以通过查看每个方法的签名来发现，或者直接查看 MyBatis 发行包中的源代码。 如果你想做的不仅仅是监控方法的调用，那么你最好相当了解要重写的方法的行为。 因为在试图修改或重写已有方法的行为时，很可能会破坏 MyBatis 的核心模块。 这些都是更底层的类和方法，所以使用插件的时候要特别当心。
+
+通过 MyBatis 提供的强大机制，使用插件是非常简单的，只需实现 Interceptor 接口，并指定想要拦截的方法签名即可。
+
+```
+// ExamplePlugin.java
+@Intercepts({@Signature(
+  type= Executor.class,
+  method = "update",
+  args = {MappedStatement.class,Object.class})})
+public class ExamplePlugin implements Interceptor {
+  private Properties properties = new Properties();
+
+  @Override
+  public Object intercept(Invocation invocation) throws Throwable {
+    // implement pre processing if need
+    Object returnObject = invocation.proceed();
+    // implement post processing if need
+    return returnObject;
+  }
+
+  @Override
+  public void setProperties(Properties properties) {
+    this.properties = properties;
+  }
+}
+<!-- mybatis-config.xml -->
+<plugins>
+  <plugin interceptor="org.mybatis.example.ExamplePlugin">
+    <property name="someProperty" value="100"/>
+  </plugin>
+</plugins>
+```
+
+上面的插件将会拦截在 Executor 实例中所有的 “update” 方法调用， 这里的 Executor 是负责执行底层映射语句的内部对象。
+
+**覆盖配置类**
+
+除了用插件来修改 MyBatis 核心行为以外，还可以通过完全覆盖配置类来达到目的。只需继承配置类后覆盖其中的某个方法，再把它传递到 SqlSessionFactoryBuilder.build(myConfig) 方法即可。再次重申，这可能会极大影响 MyBatis 的行为，务请慎之又慎。
+
 ## 环境配置
+
+生产过程中可能会涉及多个环境，如开发环境、测试环境、生产环境
+
+### 配置文件
+
+```xml
+	<!-- 定义多个环境 -->
+    <environments default="development">
+        <!-- 开发环境 -->
+        <environment id="development">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="com.mysql.cj.jdbc.Driver"/>
+                <property name="url" value="jdbc:mysql://localhost:3306/dev_db"/>
+                <property name="username" value="dev_user"/>
+                <property name="password" value="dev_password"/>
+            </dataSource>
+        </environment>
+        <!-- 测试环境 -->
+        <environment id="test">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="com.mysql.cj.jdbc.Driver"/>
+                <property name="url" value="jdbc:mysql://localhost:3306/test_db"/>
+                <property name="username" value="test_user"/>
+                <property name="password" value="test_password"/>
+            </dataSource>
+        </environment>
+        <!-- 生产环境 -->
+        <environment id="production">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="com.mysql.cj.jdbc.Driver"/>
+                <property name="url" value="jdbc:mysql://localhost:3306/prod_db"/>
+                <property name="username" value="prod_user"/>
+                <property name="password" value="prod_password"/>
+            </dataSource>
+        </environment>
+    </environments>
+```
+
+### 按需使用环境
+
+```java
+public SqlSessionFactory getSqlSessionFactory() throws IOException {
+        String resource = "mybatis-config.xml";
+        InputStream inputStream = Resources.getResourceAsStream(resource);
+        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream,"{environment id}");
+        return sqlSessionFactory;
+    }
+```
+
+## 事务管理器
+
+ MyBatis 中有两种类型的事务管理器（也就是 type="[JDBC|MANAGED]"）
+
+- JDBC – 这个配置直接使用了 JDBC 的提交和回滚功能，它依赖从数据源获得的连接来管理事务作用域。默认情况下，为了与某些驱动程序兼容，它在关闭连接时启用自动提交。然而，对于某些驱动程序来说，启用自动提交不仅是不必要的，而且是一个代价高昂的操作。因此，从 3.5.10 版本开始，你可以通过将 "skipSetAutoCommitOnClose" 属性设置为 "true" 来跳过这个步骤。例如：
+
+  ```
+  <transactionManager type="JDBC">
+    <property name="skipSetAutoCommitOnClose" value="true"/>
+  </transactionManager>
+  ```
+
+- MANAGED – 这个配置几乎没做什么。它从不提交或回滚一个连接，而是让容器来管理事务的整个生命周期（比如 JEE 应用服务器的上下文）。 默认情况下它会关闭连接。然而一些容器并不希望连接被关闭，因此需要将 closeConnection 属性设置为 false 来阻止默认的关闭行为。例如:
+
+  ```
+  <transactionManager type="MANAGED">
+    <property name="closeConnection" value="false"/>
+  </transactionManager>
+  ```
+
+**提示** Spring + MyBatis，则没有必要配置事务管理器，因为 Spring 模块会使用自带的管理器来覆盖前面的配置。
+
+## 数据源
+
+三种内建的数据源类型（也就是 type="[UNPOOLED|POOLED|JNDI]"）：
+
+**UNPOOLED**– 这个数据源的实现会每次请求时打开和关闭连接。
+
+**POOLED**– 这种数据源的实现利用“池”的概念将 JDBC 连接对象组织起来，避免了创建新的连接实例时所必需的初始化和认证时间。默认使用
+
+**JNDI** – 这个数据源实现是为了能在如 EJB 或应用服务器这类容器中使用，容器可以集中或在外部配置数据源，然后放置一个 JNDI 上下文的数据源引用。
 
 ## 数据库厂商
 
+MyBatis 可以根据不同的数据库厂商执行不同的语句，这种多厂商的支持是基于映射语句中的 `databaseId` 属性。 MyBatis 会加载带有匹配当前数据库 `databaseId` 属性和所有不带 `databaseId` 属性的语句。 如果同时找到带有 `databaseId` 和不带 `databaseId` 的相同语句，则后者会被舍弃。 为支持多厂商特性，只要像下面这样在 mybatis-config.xml 文件中加入 `databaseIdProvider` 即可：
+
+```
+<databaseIdProvider type="DB_VENDOR" />
+```
+
+databaseIdProvider 对应的 DB_VENDOR 实现会将 databaseId 设置为 `DatabaseMetaData#getDatabaseProductName()` 返回的字符串。 由于通常情况下这些字符串都非常长，而且相同产品的不同版本会返回不同的值，你可能想通过设置属性别名来使其变短：
+
+```
+<databaseIdProvider type="DB_VENDOR">
+  <property name="SQL Server" value="sqlserver"/>
+  <property name="DB2" value="db2"/>
+  <property name="Oracle" value="oracle" />
+</databaseIdProvider>
+```
+
+在提供了属性别名时，databaseIdProvider 的 DB_VENDOR 实现会将 databaseId 设置为数据库产品名与属性中的名称第一个相匹配的值，如果没有匹配的属性，将会设置为 “null”。 在这个例子中，如果 `getDatabaseProductName()` 返回“Oracle (DataDirect)”，databaseId 将被设置为“oracle”。
+
+你可以通过实现接口 `org.apache.ibatis.mapping.DatabaseIdProvider` 并在 mybatis-config.xml 中注册来构建自己的 DatabaseIdProvider：
+
+```
+public interface DatabaseIdProvider {
+  default void setProperties(Properties p) { // 从 3.5.2 开始，该方法为默认方法
+    // 空实现
+  }
+  String getDatabaseId(DataSource dataSource) throws SQLException;
+}
+```
+
 ## 映射器
+
+四种映射器方式，可以找到对应配置的映射文件
+
+```xml
+<!-- 使用相对于类路径的资源引用 -->
+<mappers>
+  <mapper resource="org/mybatis/builder/AuthorMapper.xml"/>
+  <mapper resource="org/mybatis/builder/BlogMapper.xml"/>
+  <mapper resource="org/mybatis/builder/PostMapper.xml"/>
+</mappers>
+```
+
+```xml
+<!-- 使用完全限定资源定位符（URL） -->
+<mappers>
+  <mapper url="file:///var/mappers/AuthorMapper.xml"/>
+  <mapper url="file:///var/mappers/BlogMapper.xml"/>
+  <mapper url="file:///var/mappers/PostMapper.xml"/>
+</mappers>
+```
+
+```xml
+<!-- 使用映射器接口实现类的完全限定类名 -->
+<mappers>
+  <mapper class="org.mybatis.builder.AuthorMapper"/>
+  <mapper class="org.mybatis.builder.BlogMapper"/>
+  <mapper class="org.mybatis.builder.PostMapper"/>
+</mappers>
+```
+
+```xml
+<!-- 将包内的映射器接口全部注册为映射器 -->
+<mappers>
+  <package name="org.mybatis.builder"/>
+</mappers>
+```
+
+# XML 映射器
+
+SQL 映射文件只有很少的几个顶级元素（按照应被定义的顺序列出）：
+
+- `cache` – 该命名空间的缓存配置。
+- `cache-ref` – 引用其它命名空间的缓存配置。
+- `resultMap` – 描述如何从数据库结果集中加载对象，是最复杂也是最强大的元素。
+- `sql` – 可被其它语句引用的可重用语句块。
+- `insert` – 映射插入语句。
+- `update` – 映射更新语句。
+- `delete` – 映射删除语句。
+- `select` – 映射查询语句。
+
+## select
+
+```xml
+<select id="selectBlog" resultMap="BlogResultMap">
+        select * from Blog where id = #{id}
+</select>
+<!-- 常见参数含义 -->
+<select
+  id="selectBlog"              <!-- SQL 语句的唯一标识符，用于在 MyBatis 中引用这个语句 -->
+  parameterType="int"            <!-- 输入参数的类型，这里是 int 类型 -->
+  resultType="hashmap"           <!-- 结果集的类型，这里是 HashMap -->
+  resultMap="BlogResultMap"    <!-- 结果映射的 ID，用于复杂的结果集映射 -->
+  flushCache="false"             <!-- 是否在执行该语句时刷新缓存，默认值为 false -->
+  useCache="true"                <!-- 是否启用二级缓存，默认值为 true -->
+  timeout="10"                   <!-- SQL 语句的超时时间，单位为秒 -->
+  fetchSize="256"                <!-- 提示驱动程序每次批量返回的行数 -->
+  statementType="PREPARED"       <!-- SQL 语句的类型，可以是 STATEMENT、PREPARED 或 CALLABLE -->
+  resultSetType="FORWARD_ONLY">  <!-- 结果集的类型，可以是 FORWARD_ONLY、SCROLL_SENSITIVE 或 SCROLL_INSENSITIVE -->
+```
+
+## insert, update 和 delete
+
+```xml
+<insert
+  id="insertAuthor"              <!-- SQL 语句的唯一标识符，用于在 MyBatis 中引用这个语句 -->
+  parameterType="domain.blog.Author"  <!-- 输入参数的类型，这里是 domain.blog.Author 类 -->
+  flushCache="true"              <!-- 是否在执行该语句时刷新缓存，默认值为 true -->
+  statementType="PREPARED"       <!-- SQL 语句的类型，可以是 STATEMENT、PREPARED 或 CALLABLE，默认值为 PREPARED -->
+  keyProperty=""                 <!-- （可选）指定生成的主键将被设置到的属性名 -->
+  keyColumn=""                   <!-- （可选）指定数据库中生成的主键列名 -->
+  useGeneratedKeys=""            <!-- （可选）是否使用 JDBC 的 getGeneratedKeys 方法获取主键，默认值为 false -->
+  timeout="20">                  <!-- SQL 语句的超时时间，单位为秒，默认值取决于数据库驱动程序 -->
+    <!-- SQL 插入语句 -->
+</insert>
+
+<update
+  id="updateAuthor"              <!-- SQL 语句的唯一标识符，用于在 MyBatis 中引用这个语句 -->
+  parameterType="domain.blog.Author"  <!-- 输入参数的类型，这里是 domain.blog.Author 类 -->
+  flushCache="true"              <!-- 是否在执行该语句时刷新缓存，默认值为 true -->
+  statementType="PREPARED"       <!-- SQL 语句的类型，可以是 STATEMENT、PREPARED 或 CALLABLE，默认值为 PREPARED -->
+  timeout="20">                  <!-- SQL 语句的超时时间，单位为秒，默认值取决于数据库驱动程序 -->
+    <!-- SQL 更新语句 -->
+</update>
+
+<delete
+  id="deleteAuthor"              <!-- SQL 语句的唯一标识符，用于在 MyBatis 中引用这个语句 -->
+  parameterType="domain.blog.Author"  <!-- 输入参数的类型，这里是 domain.blog.Author 类 -->
+  flushCache="true"              <!-- 是否在执行该语句时刷新缓存，默认值为 true -->
+  statementType="PREPARED"       <!-- SQL 语句的类型，可以是 STATEMENT、PREPARED 或 CALLABLE，默认值为 PREPARED -->
+  timeout="20">                  <!-- SQL 语句的超时时间，单位为秒，默认值取决于数据库驱动程序 -->
+    <!-- SQL 删除语句 -->
+</delete>
+```
+
+## SQL
+
+定义可重用的 SQL 代码片段，以便在其它语句中使用
+
+```xml
+<sql id="userColumns"> ${alias}.id,${alias}.username,${alias}.password </sql>
+
+<select id="selectUsers" resultType="map">
+  select
+    <include refid="userColumns"><property name="alias" value="t1"/></include>,
+    <include refid="userColumns"><property name="alias" value="t2"/></include>
+  from some_table t1
+    cross join some_table t2
+</select>
+```
+
+## 参数
+
+对于大多数简单的使用场景，都不需要使用复杂的参数
+
+```xml
+<select id="selectUsers" resultType="User">
+  select id, username, password
+  from users
+  where id = #{id}
+</select>
+```
+
+ JDBC 要求，如果一个列允许使用 null 值，并且会使用值为 null 的参数，就必须要指定 JDBC 类型（jdbcType)。
+
+## 字符串替换
+
+默认情况下，使用 `#{}` 参数语法时，MyBatis 会创建 `PreparedStatement` 参数占位符，并通过占位符安全地设置参数（就像使用 ? 一样）。
+
+有时你就是想直接在 SQL 语句中直接插入一个不转义的字符串。 比如 ORDER BY 子句，这时候你可以
+
+```sql
+-- MyBatis 就不会修改或转义该字符串了,用这种方式接受用户的输入，并用作语句参数是不安全的，会导致潜在的 SQL 注入攻击
+ORDER BY ${columnName}
+```
+
+## 结果映射
+
+### resultType
+
+```xml
+<select id="selectUsers" resultType="com.someapp.model.User">
+  select id, username, hashedPassword
+  from some_table
+  where id = #{id}
+</select>
+```
+
+```java
+package com.someapp.model;
+public class User {
+  private int id;
+  private String username;
+  private String hashedPassword;
+}    
+```
+
+### resultMap
+
+解决数据库列名和实体类属性名不一致。
+
+```xml
+<resultMap id="userResultMap" type="User">
+  <id property="id" column="user_id" />
+  <result property="username" column="user_name"/>
+  <result property="password" column="hashed_password"/>
+</resultMap>
+
+<select id="selectUsers" resultMap="userResultMap">
+  select user_id, user_name, hashed_password
+  from some_table
+  where id = #{id}
+</select>
+```
+
+
 
 # 日志
 

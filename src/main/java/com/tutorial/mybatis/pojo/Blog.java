@@ -2,7 +2,7 @@ package com.tutorial.mybatis.pojo;
 
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -12,8 +12,8 @@ public class Blog {
     private String title;
     private String content;
     private Integer authorId;
-    private Date createdAt;
-    private Date updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     // 内容相关属性
     private String summary;
@@ -33,7 +33,7 @@ public class Blog {
 
     // 其他属性
     private String featuredImage;
-    private Boolean isFeatured;
-    private Boolean allowComments;
+    private Integer isFeatured;
+    private Integer allowComments;
 
 }

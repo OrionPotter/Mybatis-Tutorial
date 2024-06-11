@@ -2,7 +2,7 @@
 CREATE TABLE Blog (
     id INT PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
-    content TEXT NOT NULL,
+    content VARCHAR(255) NOT NULL,
     author_id INT NOT NULL,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,
@@ -17,8 +17,8 @@ CREATE TABLE Blog (
     meta_description VARCHAR(255),
     meta_keywords VARCHAR(255),
     featured_image VARCHAR(255),
-    is_featured BOOLEAN DEFAULT FALSE,
-    allow_comments BOOLEAN DEFAULT TRUE
+    is_featured INT DEFAULT 0,
+    allow_comments INT DEFAULT 0
 );
 
 -- 插入10条数据

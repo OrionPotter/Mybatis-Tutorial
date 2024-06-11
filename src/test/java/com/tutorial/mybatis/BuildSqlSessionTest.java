@@ -7,6 +7,7 @@ import com.tutorial.mybatis.pojo.Blog;
 import org.apache.ibatis.session.SqlSession;
 import org.junit.Test;
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
 
 
 public class BuildSqlSessionTest {
@@ -17,6 +18,7 @@ public class BuildSqlSessionTest {
         try (SqlSession sqlSession = sqlSessionFactory.getSqlSessionFactory().openSession()){
             BlogMapper mapper = sqlSession.getMapper(BlogMapper.class);
             Blog blog = mapper.selectBlog(1);
+            System.out.println(blog.getCreatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
             System.out.println(blog.toString());
         }
     }
