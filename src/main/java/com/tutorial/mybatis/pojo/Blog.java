@@ -1,30 +1,39 @@
 package com.tutorial.mybatis.pojo;
 
+import lombok.Data;
+
+import java.util.Date;
+import java.util.List;
+
+@Data
 public class Blog {
-    String id;
-    String name;
+    // 基本属性
+    private Integer id;
+    private String title;
+    private String content;
+    private Integer authorId;
+    private Date createdAt;
+    private Date updatedAt;
 
-    public Blog() {
-    }
+    // 内容相关属性
+    private String summary;
+    private List<String> tags;
+    private List<String> categories;
 
-    public Blog(String id, String name) {
-        this.id = id;
-        this.name = name;
-    }
+    // 元数据属性
+    private String status;
+    private Integer views;
+    private Integer likes;
+    private Integer commentsCount;
 
-    public String getId() {
-        return id;
-    }
+    // SEO相关属性
+    private String slug;
+    private String metaDescription;
+    private List<String> metaKeywords;
 
-    public void setId(String id) {
-        this.id = id;
-    }
+    // 其他属性
+    private String featuredImage;
+    private Boolean isFeatured;
+    private Boolean allowComments;
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
 }

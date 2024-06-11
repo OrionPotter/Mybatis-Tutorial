@@ -15,7 +15,7 @@ public class BuildSqlSessionFactoryByConfig {
         // 配置 HikariCP
         HikariConfig hikariConfig = new HikariConfig();
         hikariConfig.setDriverClassName("com.mysql.cj.jdbc.Driver");
-        hikariConfig.setJdbcUrl("jdbc:mysql://localhost:3306/test?serverTimezone=Asia/Shanghai");
+        hikariConfig.setJdbcUrl("jdbc:mysql://localhost:3306/mybatis_tutorial?serverTimezone=Asia/Shanghai");
         hikariConfig.setUsername("root");
         hikariConfig.setPassword("123456");
         hikariConfig.setMaximumPoolSize(10);
