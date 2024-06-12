@@ -28,5 +28,7 @@
     </environments>
     <mappers>
         <mapper resource="com.tutorial.mybatis.mapper/BlogMapper.xml"/>
+        <mapper resource="com.tutorial.mybatis.mapper/UserMapper.xml"/>
+        <mapper resource="com.tutorial.mybatis.mapper/OrderMapper.xml"/>
     </mappers>
 </configuration>

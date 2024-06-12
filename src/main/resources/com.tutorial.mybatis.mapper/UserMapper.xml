@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tutorial.mybatis.mapper.UserMapper">
+    <resultMap id="UserResultMap" type="com.tutorial.mybatis.pojo.User">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <association property="address" javaType="com.tutorial.mybatis.pojo.Address">
+            <id property="id" column="address_id"/>
+            <result property="street" column="street"/>
+            <result property="city" column="city"/>
+        </association>
+    </resultMap>
+
+    <select id="selectUser" resultMap="UserResultMap">
+        SELECT u.id, u.name, a.id AS address_id, a.street, a.city
+        FROM User u
+        LEFT JOIN Address a ON u.address_id = a.id
+        WHERE u.id = #{id}
+    </select>
+</mapper>

@@ -839,6 +839,148 @@ public class User {
 </select>
 ```
 
+### association
+
+`association`用于处理一对一的关系。它通常用于映射一个对象内部的另一个对象。
+
+**示例**
+
+我们有两个表：`User` 和 `Address`，其中每个用户都有一个地址。
+
+**表结构**：
+
+```sql
+CREATE TABLE User (
+    id INT PRIMARY KEY,
+    name VARCHAR(50),
+    address_id INT
+);
+
+CREATE TABLE Address (
+    id INT PRIMARY KEY,
+    street VARCHAR(100),
+    city VARCHAR(50)
+);
+```
+
+**实体类：**
+
+```java
+@Data
+public class Address {
+    private int id;
+    private String street;
+    private String city;
+}
+
+@Data
+public class User {
+    private int id;
+    private String name;
+    private Address address;
+}
+```
+
+**mybatis映射文件**
+
+```xml
+<mapper namespace="com.tutorial.mybatis.mapper.UserMapper">
+    <resultMap id="UserResultMap" type="com.tutorial.mybatis.pojo.User">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <association property="address" javaType="com.tutorial.mybatis.pojo.Address">
+            <id property="id" column="address_id"/>
+            <result property="street" column="street"/>
+            <result property="city" column="city"/>
+        </association>
+    </resultMap>
+
+    <select id="selectUser" resultMap="UserResultMap">
+        SELECT u.id, u.name, a.id AS address_id, a.street, a.city
+        FROM User u
+        LEFT JOIN Address a ON u.address_id = a.id
+        WHERE u.id = #{id}
+    </select>
+</mapper>
+```
+
+- **property**：Java 对象中的属性名。
+- **javaType**：关联的 Java 类型。
+- **column**：数据库中的列名。
+- **id** 和 **result**：分别用于映射主键和普通字段。
+
+### collection
+
+用于处理一对多的关系。它通常用于映射一个对象内部的集合。
+
+**示例**
+
+假设我们有两个表：`Order` 和 `OrderItem`，其中每个订单都有多个订单项。
+
+**表结构**：
+
+```sql
+CREATE TABLE `Order` (
+    id INT PRIMARY KEY,
+    user_id INT
+);
+
+CREATE TABLE OrderItem (
+    id INT PRIMARY KEY,
+    order_id INT,
+    product_name VARCHAR(50),
+    quantity INT
+);
+```
+
+**实体类**：
+
+```java
+public class Order {
+    private int id;
+    private int userId;
+    private List<OrderItem> orderItems;
+    // getters and setters
+}
+
+public class OrderItem {
+    private int id;
+    private int orderId;
+    private String productName;
+    private int quantity;
+    // getters and setters
+}
+```
+
+**MyBatis 映射文件**：
+
+```xml
+<mapper namespace="com.tutorial.mybatis.mapper.OrderMapper">
+    <resultMap id="OrderResultMap" type="com.tutorial.mybatis.pojo.Order">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <collection property="orderItems" ofType="com.tutorial.mybatis.pojo.OrderItem">
+            <id property="id" column="item_id"/>
+            <result property="orderId" column="order_id"/>
+            <result property="productName" column="product_name"/>
+            <result property="quantity" column="quantity"/>
+        </collection>
+    </resultMap>
+
+    <select id="selectOrder" resultMap="OrderResultMap">
+        SELECT o.id, o.user_id, i.id AS item_id, i.order_id, i.product_name, i.quantity
+        FROM `Order` o
+        LEFT JOIN OrderItem i ON o.id = i.order_id
+        WHERE o.id = #{id}
+    </select>
+</mapper>
+```
+
+- **property**：Java 对象中的集合属性名。
+- **ofType**：集合中元素的 Java 类型。
+- **column**：数据库中的列名。
+- **id** 和 **result**：分别用于映射主键和普通字段。
+
 
 
 # 日志
