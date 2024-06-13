@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tutorial.mybatis.mapper.AnimalMapper">
+
+    <resultMap id="AnimalResultMap" type="com.tutorial.mybatis.pojo.Animal">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <discriminator javaType="String" column="type">
+            <case value="cat" resultType="com.tutorial.mybatis.pojo.Cat">
+                <result property="breed" column="breed"/>
+                <result property="color" column="breed"/>
+            </case>
+            <case value="dog" resultType="com.tutorial.mybatis.pojo.Dog">
+                <result property="breed" column="breed"/>
+                <result property="color" column="breed"/>
+            </case>
+
+        </discriminator>
+    </resultMap>
+
+    <select id="selectAll" resultMap="AnimalResultMap">
+        select * from animals
+    </select>
+</mapper>

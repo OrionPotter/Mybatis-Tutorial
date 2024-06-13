@@ -981,6 +981,335 @@ public class OrderItem {
 - **column**：数据库中的列名。
 - **id** 和 **result**：分别用于映射主键和普通字段。
 
+### 构造函数
+
+在 MyBatis 中，除了使用 `<result>` 元素将查询结果映射到 Java 对象的属性外，还可以使用构造函数来进行映射。
+
+**示例**
+
+我们有一个 `Book` 类，它只有一个带参数的构造函数：
+
+```java
+@Data
+@AllArgsConstructor
+public class Book {
+    private int id;
+    private String title;
+    private String author;
+    private double price;
+}   
+```
+
+**数据库表结构**
+
+```sql
+CREATE TABLE books (
+    id INT PRIMARY KEY,
+    title VARCHAR(100),
+    author VARCHAR(100),
+    price DOUBLE
+);
+```
+
+**Mybatis映射文件**
+
+```xml
+<mapper namespace="com.tutorial.mybatis.mapper.BookMapper">
+
+    <resultMap id="BookResultMap" type="com.tutorial.mybatis.pojo.Books">
+        <constructor>
+            <idArg column="id" javaType="Integer" />
+            <arg column="title" javaType="String"/>
+            <arg column="author" javaType="String"/>
+            <arg column="price" javaType="Double"/>
+        </constructor>
+    </resultMap>
+
+    <select id="selectById" resultMap="BookResultMap">
+        select id,title,author,price from books where id = #{id}
+    </select>
+</mapper>
+```
+
+**Mapper接口**
+
+```java
+public interface BookMapper {
+    Books selectById(Integer id);
+}
+```
+
+- 使用 `<constructor>` 元素来定义构造函数参数的映射。
+- `<idArg>` 用于映射主键参数，`<arg>` 用于映射其他参数。
+
+### 鉴别器
+
+鉴别器（Discriminator）用于处理多态结果映射，即根据某个列的值动态地选择不同的结果映射。这在处理继承关系或需要根据某个列的值映射到不同的类时非常有用。
+
+**示例**
+
+假设我们有一个 `Animal` 表，其中包含不同类型的动物（如猫和狗）。我们希望根据 `type` 列的值将结果映射到不同的类（`Cat` 或 `Dog`）。
+
+**表结构**
+
+```sql
+CREATE TABLE animals (
+    id INT PRIMARY KEY,
+    name VARCHAR(50),
+    type VARCHAR(20),
+    breed VARCHAR(50),
+    color VARCHAR(50)
+);
+```
+
+**实体类**
+
+我们有一个基类 `Animal`，以及两个子类 `Cat` 和 `Dog`。
+
+```java
+@Data
+@NoArgsConstructor
+public abstract class Animal {
+    private Integer id;
+    private String name;
+    public Animal(Integer id,String name){
+        this.id = id;
+        this.name = name;
+    }
+}
+
+@Data
+public class Cat extends Animal{
+    String breed;
+    String color;
+    public Cat(Integer id, String name,String breed,String color) {
+        super(id, name);
+        this.breed = breed;
+        this.color = color;
+    }
+}
+
+@Data
+public class Dog extends Animal{
+    String breed;
+    String color;
+
+    public Dog(Integer id, String name,String breed,String color) {
+        super(id, name);
+        this.breed = breed;
+        this.color = color;
+    }
+}
+```
+
+**Mapper接口**
+
+```java
+public interface AnimalMapper {
+    List<Animal> selectAll();
+}
+```
+
+**Mapper映射文件**
+
+```xml
+<mapper namespace="com.tutorial.mybatis.mapper.AnimalMapper">
+
+    <resultMap id="AnimalResultMap" type="com.tutorial.mybatis.pojo.Animal">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <discriminator javaType="String" column="type">
+            <case value="cat" resultType="com.tutorial.mybatis.pojo.Cat">
+                <result property="breed" column="breed"/>
+                <result property="color" column="breed"/>
+            </case>
+            <case value="dog" resultType="com.tutorial.mybatis.pojo.Dog">
+                <result property="breed" column="breed"/>
+                <result property="color" column="breed"/>
+            </case>
+
+        </discriminator>
+    </resultMap>
+
+    <select id="selectAll" resultMap="AnimalResultMap">
+        select * from animals
+    </select>
+</mapper>
+```
+
+- 使用 `<discriminator>` 元素来定义鉴别器。
+- `javaType` 属性指定鉴别器列的 Java 类型。
+- `column` 属性指定用于鉴别的列名。
+- `<case>` 元素用于定义不同值对应的结果映射。
+
+## 自动映射
+
+简单的场景下，MyBatis 可以为你自动映射查询结果，MyBatis会获取结果中返回的列名并在 Java 类中查找相同名字的属性（忽略大小写），但如果遇到复杂的场景，你需要构建一个结果映射，一般java遵循驼峰命名，数据库遵循_分割单词，为了让这两种自动映射需要在配置文件中开启驼峰命名。
+
+```xml
+<!-- mybatis-config.xml --> 
+<settings>
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+</settings>
+```
+
+有三种自动映射等级：
+
+- `NONE` - 禁用自动映射。仅对手动映射的属性进行映射。
+- `PARTIAL` - 对除在内部定义了嵌套结果映射（也就是连接的属性）以外的属性进行映射
+- `FULL` - 自动映射所有属性。
+
+## 缓存
+
+MyBatis 提供了两种类型的缓存机制：一级缓存（本地缓存）和二级缓存。一级缓存是默认启用的，而二级缓存需要进行额外的配置。
+
+### 一级缓存（本地缓存）
+
+一级缓存是 SqlSession 级别的缓存，它在同一个 SqlSession 中有效。MyBatis 默认启用一级缓存。
+
+```java
+@Test
+    public void testCacheLevel1() throws IOException {
+        BuildSqlSessionFactoryByXml sqlSessionFactory = new BuildSqlSessionFactoryByXml();
+        try (SqlSession sqlSession = sqlSessionFactory.getSqlSessionFactory().openSession()){
+            UserMapper mapper = sqlSession.getMapper(UserMapper.class);
+            // 第一次查询，结果会被缓存
+            User user1 = mapper.selectUser(1);
+            System.out.println(user1.toString());
+
+            // 第二次查询，MyBatis 会从缓存中获取结果，而不是再次查询数据库
+            User user2 = mapper.selectUser(1);
+            System.out.println(user2.toString());
+            
+        }
+    }
+```
+
+### 二级缓存
+
+二级缓存是 Mapper 映射级别的缓存，它在多个 SqlSession 之间共享。
+
+#### mybatis-config.xml
+
+要启用二级缓存，需要进行以下配置：
+
+```xml
+<configuration>
+    <settings>
+        <setting name="cacheEnabled" value="true"/>
+    </settings>
+</configuration>
+```
+
+#### 配置Mapper文件
+
+在 Mapper XML 文件中启用二级缓存：
+
+```xml
+<mapper namespace="com.tutorial.mybatis.mapper.UserMapper">
+    <cache/>  <!-- 开启2级缓存 -->
+    <resultMap id="UserResultMap" type="com.tutorial.mybatis.pojo.User">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <association property="address" javaType="com.tutorial.mybatis.pojo.Address">
+            <id property="id" column="address_id"/>
+            <result property="street" column="street"/>
+            <result property="city" column="city"/>
+        </association>
+    </resultMap>
+    <select id="selectUser" resultMap="UserResultMap">
+        SELECT u.id, u.name, a.id AS address_id, a.street, a.city
+        FROM User u
+        LEFT JOIN Address a ON u.address_id = a.id
+        WHERE u.id = #{id}
+    </select>
+</mapper>
+```
+
+#### 实体类实现 Serializable 接口
+
+```java
+@Data
+public class User implements Serializable {
+    private int id;
+    private String name;
+    private Address address;
+}
+```
+
+#### 配置缓存策略
+
+通过 `<cache>` 元素配置缓存策略，例如设置缓存大小、刷新间隔等
+
+```xml
+<cache
+    eviction="LRU"
+    flushInterval="60000"
+    size="512"
+    readOnly="true"/>
+```
+
+- **eviction**：缓存回收策略，默认值是 LRU（最近最少使用）。
+- **flushInterval**：刷新间隔，单位是毫秒。
+- **size**：缓存大小，表示可以缓存的对象数目。
+- **readOnly**：只读属性，默认值是 `false`。
+
+# 动态 SQL
+
+MyBatis 动态 SQL 是 MyBatis 提供的一种强大功能，用于在运行时动态生成 SQL 语句。动态 SQL 语句可以根据不同的条件生成不同的 SQL 语句，从而提高 SQL 的灵活性和可维护性。
+
+- if
+- choose (when, otherwise)
+- trim (where, set)
+- foreach
+
+## `<if>` 标签
+
+根据用户的名字和id动态查询用户
+
+```xml
+<select id="selectUserByIdAndName" resultMap="UserResultMap">
+        SELECT u.id, u.name, a.id AS address_id, a.street, a.city
+        FROM User u
+        LEFT JOIN Address a ON u.address_id = a.id
+        WHERE 1 = 1
+        <if test="id != null" >
+            and u.id = #{id}
+        </if>
+        <if test="name != null" >
+            and u.name = #{name}
+        </if>
+</select>
+```
+
+```java
+@Test
+public void testIfLabel() throws IOException {
+        BuildSqlSessionFactoryByXml sqlSessionFactory = new BuildSqlSessionFactoryByXml();
+        try (SqlSession sqlSession = sqlSessionFactory.getSqlSessionFactory().openSession()){
+            UserMapper mapper = sqlSession.getMapper(UserMapper.class);
+            User user1 = mapper.selectUserByIdAndName(1,"John Doe");
+            System.out.println(user1.toString());
+            User user2 = mapper.selectUserByIdAndName(2,null);
+            System.out.println(user2.toString());
+    }
+ }
+```
+
+## `<choose>`、`<when>` 和 `<otherwise>` 标签
+
+`<choose>` 标签用于实现类似于 Java 中的 `switch` 语句的功能，`<when>` 和 `<otherwise>` 标签用于定义条件分支。
+
+
+
+## `<trim>`、`<where>` 和 `<set>` 标签
+
+## `<foreach>` 标签
+
+
+
+
+
 
 
 # 日志

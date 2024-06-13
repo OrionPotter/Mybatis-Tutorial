@@ -9,6 +9,7 @@
     <settings>
         <setting name="logImpl" value="SLF4J"/>
         <setting name="mapUnderscoreToCamelCase" value="true"/>
+        <setting name="cacheEnabled" value="true"/>
     </settings>
 
     <typeHandlers>
@@ -30,5 +31,7 @@
         <mapper resource="com.tutorial.mybatis.mapper/BlogMapper.xml"/>
         <mapper resource="com.tutorial.mybatis.mapper/UserMapper.xml"/>
         <mapper resource="com.tutorial.mybatis.mapper/OrderMapper.xml"/>
+        <mapper resource="com.tutorial.mybatis.mapper/BookMapper.xml"/>
+        <mapper resource="com.tutorial.mybatis.mapper/AnimalMapper.xml"/>
     </mappers>
 </configuration>
