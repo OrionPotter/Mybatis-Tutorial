@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.tutorial.mybatis.mapper.FoodMapper">
+
+    <select id="selectFoodListById" resultType="com.tutorial.mybatis.pojo.Food">
+        SELECT id, name, category, price, available
+        FROM foods
+        where id in 
+        <foreach item="id" index="index" collection="listId" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="selectAllFood" resultType="com.tutorial.mybatis.pojo.Food">
+        SELECT * FROM foods
+    </select>
+
+    <select id="selectFood" resultType="com.tutorial.mybatis.pojo.Food">
+        SELECT id, name, category, price, available
+        FROM foods
+        <where>
+            <trim prefixOverrides="AND | OR">
+
+                <if test="name != null and name != ''">
+                     AND name = #{name}
+                </if>
+                <if test="category != null and category != ''">
+                    AND category = #{category}
+                </if>
+                <if test="price != null and price != ''">
+                    AND price = #{price}
+                </if>
+                <if test="available != null and available != ''">
+                    AND available = #{available}
+                </if>
+            </trim>
+        </where>
+    </select>
+
+    <!-- 动态更新食物信息 -->
+    <update id="updateFood">
+        UPDATE foods
+        <set>
+            <trim suffixOverrides=",">
+                <if test="name != null">
+                    name = #{name},
+                </if>
+                <if test="category != null">
+                    category = #{category},
+                </if>
+                <if test="price != null">
+                    price = #{price},
+                </if>
+                <if test="available != null">
+                    available = #{available},,
+                </if>
+            </trim>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+</mapper>

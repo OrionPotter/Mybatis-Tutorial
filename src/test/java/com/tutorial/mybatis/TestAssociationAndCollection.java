@@ -1,7 +1,7 @@
 package com.tutorial.mybatis;
 
 
-import com.tutorial.mybatis.factory.BuildSqlSessionFactoryByXml;
+import com.tutorial.mybatis.factory.BuildSqlSessionFactory;
 import com.tutorial.mybatis.mapper.AnimalMapper;
 import com.tutorial.mybatis.mapper.BookMapper;
 import com.tutorial.mybatis.mapper.OrderMapper;
@@ -16,8 +16,8 @@ import java.util.List;
 public class TestAssociationAndCollection {
     @Test
     public void testAssociation() throws IOException {
-        BuildSqlSessionFactoryByXml sqlSessionFactory = new BuildSqlSessionFactoryByXml();
-        try (SqlSession sqlSession = sqlSessionFactory.getSqlSessionFactory().openSession()){
+        BuildSqlSessionFactory sqlSessionFactory = new BuildSqlSessionFactory();
+        try (SqlSession sqlSession = sqlSessionFactory.getSqlSessionFactoryByXml().openSession()){
             UserMapper mapper = sqlSession.getMapper(UserMapper.class);
             User user = mapper.selectUser(1);
             System.out.println(user.toString());
@@ -26,8 +26,8 @@ public class TestAssociationAndCollection {
 
     @Test
     public void testCollection() throws IOException {
-        BuildSqlSessionFactoryByXml sqlSessionFactory = new BuildSqlSessionFactoryByXml();
-        try (SqlSession sqlSession = sqlSessionFactory.getSqlSessionFactory().openSession()){
+        BuildSqlSessionFactory sqlSessionFactory = new BuildSqlSessionFactory();
+        try (SqlSession sqlSession = sqlSessionFactory.getSqlSessionFactoryByXml().openSession()){
             OrderMapper mapper = sqlSession.getMapper(OrderMapper.class);
             Order order = mapper.selectOrder(1);
             System.out.println(order.toString());
@@ -36,8 +36,8 @@ public class TestAssociationAndCollection {
 
     @Test
     public void testConstructor() throws IOException {
-        BuildSqlSessionFactoryByXml sqlSessionFactory = new BuildSqlSessionFactoryByXml();
-        try (SqlSession sqlSession = sqlSessionFactory.getSqlSessionFactory().openSession()){
+        BuildSqlSessionFactory sqlSessionFactory = new BuildSqlSessionFactory();
+        try (SqlSession sqlSession = sqlSessionFactory.getSqlSessionFactoryByXml().openSession()){
             BookMapper mapper = sqlSession.getMapper(BookMapper.class);
             Books books = mapper.selectById(1);
             System.out.println(books.toString());
@@ -46,8 +46,8 @@ public class TestAssociationAndCollection {
 
     @Test
     public void testDis() throws IOException {
-        BuildSqlSessionFactoryByXml sqlSessionFactory = new BuildSqlSessionFactoryByXml();
-        try (SqlSession sqlSession = sqlSessionFactory.getSqlSessionFactory().openSession()){
+        BuildSqlSessionFactory sqlSessionFactory = new BuildSqlSessionFactory();
+        try (SqlSession sqlSession = sqlSessionFactory.getSqlSessionFactoryByXml().openSession()){
             AnimalMapper mapper = sqlSession.getMapper(AnimalMapper.class);
             List<Animal> animals = mapper.selectAll();
             for (Animal animal : animals) {

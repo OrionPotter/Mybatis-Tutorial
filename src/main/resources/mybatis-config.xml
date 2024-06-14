@@ -16,11 +16,25 @@
         <typeHandler handler="com.tutorial.mybatis.handler.StringListTypeHandler" javaType="java.util.List"/>
     </typeHandlers>
 
+    <plugins>
+        <plugin interceptor="com.tutorial.mybatis.plugin.SqlExecutionTimeInterceptor">
+            <!-- 插件的属性配置 -->
+            <!-- <property name="propertyName" value="propertyValue"/> -->
+        </plugin>
+
+        <plugin interceptor="com.github.pagehelper.PageInterceptor">
+            <property name="helperDialect" value="mysql"/>
+            <property name="reasonable" value="true"/>
+            <property name="supportMethodsArguments" value="true"/>
+            <property name="params" value="count=countSql"/>
+        </plugin>
+    </plugins>
+
     <environments default="development">
         <environment id="development">
             <transactionManager type="JDBC"/>
             <dataSource type="POOLED">
-                <property name="driver" value="${driver}"/>
+            <property name="driver" value="${driver}"/>
                 <property name="url" value="${url}"/>
                 <property name="username" value="${username}"/>
                 <property name="password" value="${password}"/>
@@ -33,5 +47,6 @@
         <mapper resource="com.tutorial.mybatis.mapper/OrderMapper.xml"/>
         <mapper resource="com.tutorial.mybatis.mapper/BookMapper.xml"/>
         <mapper resource="com.tutorial.mybatis.mapper/AnimalMapper.xml"/>
+        <mapper resource="com.tutorial.mybatis.mapper/FoodMapper.xml"/>
     </mappers>
 </configuration>

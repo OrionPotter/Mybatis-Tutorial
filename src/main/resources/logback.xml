@@ -6,13 +6,10 @@
         </encoder>
     </appender>
 
-
-
     <!-- Root Logger -->
     <root level="debug">
         <appender-ref ref="STDOUT" />
     </root>
-
     <!-- MyBatis Logger -->
-    <logger name="org.mybatis" level="debug" />
+    <logger name="com.tutorial.mybatis" level="debug" />
 </configuration>

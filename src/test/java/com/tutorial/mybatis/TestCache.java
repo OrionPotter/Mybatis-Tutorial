@@ -1,6 +1,6 @@
 package com.tutorial.mybatis;
 
-import com.tutorial.mybatis.factory.BuildSqlSessionFactoryByXml;
+import com.tutorial.mybatis.factory.BuildSqlSessionFactory;
 import com.tutorial.mybatis.mapper.UserMapper;
 import com.tutorial.mybatis.pojo.User;
 import org.apache.ibatis.session.SqlSession;
@@ -17,8 +17,8 @@ import java.io.IOException;
 public class TestCache {
     @Test
     public void testCacheLevel1() throws IOException {
-        BuildSqlSessionFactoryByXml sqlSessionFactory = new BuildSqlSessionFactoryByXml();
-        try (SqlSession sqlSession = sqlSessionFactory.getSqlSessionFactory().openSession()){
+        BuildSqlSessionFactory sqlSessionFactory = new BuildSqlSessionFactory();
+        try (SqlSession sqlSession = sqlSessionFactory.getSqlSessionFactoryByXml().openSession()){
             UserMapper mapper = sqlSession.getMapper(UserMapper.class);
             // 第一次查询，结果会被缓存
             User user1 = mapper.selectUser(1);
@@ -33,15 +33,16 @@ public class TestCache {
 
     @Test
     public void testCacheLevel2() throws IOException {
-        BuildSqlSessionFactoryByXml sqlSessionFactory = new BuildSqlSessionFactoryByXml();
-        try (SqlSession sqlSession = sqlSessionFactory.getSqlSessionFactory().openSession()){
+        BuildSqlSessionFactory sqlSessionFactory = new BuildSqlSessionFactory();
+        try (SqlSession sqlSession = sqlSessionFactory.getSqlSessionFactoryByXml().openSession()){
             UserMapper mapper = sqlSession.getMapper(UserMapper.class);
             // 第一次查询，结果会被缓存
             User user1 = mapper.selectUser(1);
             System.out.println(user1.toString());
         }
 
-        try (SqlSession sqlSession = sqlSessionFactory.getSqlSessionFactory().openSession()){
+
+        try (SqlSession sqlSession = sqlSessionFactory.getSqlSessionFactoryByXml().openSession()){
             UserMapper mapper = sqlSession.getMapper(UserMapper.class);
             // 第二次查询，从缓存中查找数据
             User user1 = mapper.selectUser(1);

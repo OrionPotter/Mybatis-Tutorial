@@ -1,96 +1,58 @@
 # 什么是mybatis
 
-MyBatis是持久层框架，它支持自定义SQL、存储过程以及高级映射。MyBatis减少了JDBC设置参数和获取结果集的代码工作。MyBatis通过XML或注解将java的原始类型、接口、POJO映射到数据库中记录。
+>MyBatis是一个持久层框架，支持自定义SQL、存储过程以及高级映射。它减少了JDBC设置参数和获取结果集的代码工作，通过XML或注解将Java的原始类型、接口、POJO映射到数据库记录中。
+
+## 核心组件
+
+1. SqlSessionFactory：创建SqlSession的工厂。
+
+2. SqlSession：提供了与数据库交互的主要接口，管理数据库连接、事务处理。
+
+3. Mapper：Mapper接口定义了数据库操作方法，通过绑定注解或者XML进行映射SQL，执行数据库操作方法时，动态代理对象拦截后调用executor执行对应的SQL。
+
+4. Configruation：MyBatis的全局配置类，包含所有配置信息，包括数据源、事务管理、映射器、插件等。
+
+5. Executor：负责执行具体的SQL操作，并处理结果集的映射。
 
 # 入门
 
 ## 安装Mybatis
 
-项目采用Maven构建，只需要导入mybatis依赖：
+项目采用Maven构建，只需要在`pom.xml`中导入MyBatis、Mysql连接依赖，项目以Mysql数据库为例进行实践。
 
 ```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-
-    <groupId>org.example</groupId>
-    <artifactId>Mybatis-Tutorial</artifactId>
-    <version>1.0-SNAPSHOT</version>
-
-    <properties>
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
-    </properties>
-    <dependencies>
-        <!-- MyBatis -->
-        <dependency>
-            <groupId>org.mybatis</groupId>
-            <artifactId>mybatis</artifactId>
-            <version>3.5.16</version>
-        </dependency>
-        <!-- MySQL Connector -->
-        <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
-            <version>8.0.17</version>
-        </dependency>
-        <!-- HikariCP -->
-        <dependency>
-            <groupId>com.zaxxer</groupId>
-            <artifactId>HikariCP</artifactId>
-            <version>4.0.3</version>
-        </dependency>
-        <!-- SLF4J API -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.7.30</version>
-        </dependency>
-        <!-- Logback Classic -->
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>1.2.3</version>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.12</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>1.18.30</version>
-        </dependency>
-    </dependencies>
-</project>
+<!-- MyBatis -->
+<dependency>
+    <groupId>org.mybatis</groupId>
+    <artifactId>mybatis</artifactId>
+    <version>3.5.16</version>
+</dependency>
+<!-- MySQL Connector -->
+<dependency>
+    <groupId>mysql</groupId>
+    <artifactId>mysql-connector-java</artifactId>
+    <version>8.0.17</version>
+</dependency>
 ```
 
 ## 构建SqlSessionFactory
 
-MyBatis 的核心是 `SqlSessionFactory`，它负责创建和管理 `SqlSession` 对象，用于执行 SQL 语句、获取映射器（Mapper）以及管理事务。要获得 `SqlSessionFactory` 实例，可以使用 `SqlSessionFactoryBuilder`。`SqlSessionFactoryBuilder` 能够通过读取 XML 配置文件（如 `mybatis-config.xml`）或者通过编程方式配置的 `Configuration` 对象来构建 `SqlSessionFactory` 实例。
+MyBatis 的核心是 `SqlSessionFactory`，它负责创建和管理 `SqlSession` 对象。要获得 `SqlSessionFactory` 实例，可以使用 `SqlSessionFactoryBuilder`。`SqlSessionFactoryBuilder` 能够通过读取 XML 配置文件（如 `mybatis-config.xml`）或者通过编程方式配置的 `Configuration` 对象来构建 `SqlSessionFactory` 实例。
 
 ### 基于xml构建
 
-从xml构建SqlSessionFactory,需要读取类路径下的资源配置文件，mybatis提供了一个Resources工具类，可以更加简单读取。
+基于mybatis配置文件mybatis-config.xml构建SqlSessionFactory,需要读取类路径下的资源配置文件(src/main/resources/mybatis-config.xml)，mybatis提供了一个Resources工具类，可以更加简单读取。
 
 ```java
-public class BuildSqlSessionFactoryByXml {
-    public SqlSessionFactory getSqlSessionFactoryByXml() throws IOException {
-        String resource = "mybatis-config.xml";
-        InputStream inputStream = Resources.getResourceAsStream(resource);
-        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
-        return sqlSessionFactory;
-    }
-}
+String resource = "mybatis-config.xml";
+InputStream inputStream = Resources.getResourceAsStream(resource);
+SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
 ```
 
-**mybatis-config.xml**
+**mybatis配置文件示例：**
 
 ```xml
+<!-- mybatis-config.xml -->
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE configuration
         PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
@@ -99,16 +61,11 @@ public class BuildSqlSessionFactoryByXml {
     <environments default="development">
         <environment id="development">
             <transactionManager type="JDBC"/>
-            <dataSource type="com.zaxxer.hikari.HikariDataSource">
-                <property name="driverClassName" value="com.mysql.cj.jdbc.Driver"/>
-                <property name="jdbcUrl" value="jdbc:mysql://localhost:3306/test"/>
-                <property name="username" value="root"/>
-                <property name="password" value="123456"/>
-                <property name="maximumPoolSize" value="10"/>
-                <property name="minimumIdle" value="5"/>
-                <property name="connectionTimeout" value="30000"/>
-                <property name="idleTimeout" value="600000"/>
-                <property name="maxLifetime" value="1800000"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="${driver}"/>
+                <property name="url" value="${url}"/>
+                <property name="username" value="${username}"/>
+                <property name="password" value="${password}"/>
             </dataSource>
         </environment>
     </environments>
@@ -117,62 +74,84 @@ public class BuildSqlSessionFactoryByXml {
 
 ### 基于Configruation构建
 
-```java
-public class BuildSqlSessionFactoryByConfig {
-    public SqlSessionFactory getSqlSessionFactoryByXml() throws IOException {
-        // 配置 HikariCP
-        HikariConfig hikariConfig = new HikariConfig();
-        hikariConfig.setDriverClassName("com.mysql.cj.jdbc.Driver");
-        hikariConfig.setJdbcUrl("jdbc:mysql://localhost:3306/test");
-        hikariConfig.setUsername("root");
-        hikariConfig.setPassword("123456");
-        hikariConfig.setMaximumPoolSize(10);
-        hikariConfig.setMinimumIdle(5);
-        hikariConfig.setConnectionTimeout(30000);
-        hikariConfig.setIdleTimeout(600000);
-        hikariConfig.setMaxLifetime(1800000);
+基于自定义的mybatis全局配置类构建SqlSessionFactory，可以配置数据源、自定义连接池等相关配置信息。
 
-        DataSource dataSource = new HikariDataSource(hikariConfig);
-        TransactionFactory transactionFactory = new JdbcTransactionFactory();
-        Environment environment = new Environment("development", transactionFactory, dataSource);
-        Configuration configuration = new Configuration(environment);
-        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(configuration);
-        return sqlSessionFactory;
-    }
-}
+```java
+// 自定义配置 HikariCP 连接池
+HikariConfig hikariConfig = new HikariConfig();
+hikariConfig.setDriverClassName("com.mysql.cj.jdbc.Driver");
+hikariConfig.setJdbcUrl("jdbc:mysql://localhost:3306/test");
+hikariConfig.setUsername("root");
+hikariConfig.setPassword("123456");
+DataSource dataSource = new HikariDataSource(hikariConfig);
+TransactionFactory transactionFactory = new JdbcTransactionFactory();
+Environment environment = new Environment("development", transactionFactory, dataSource);
+Configuration configuration = new Configuration(environment);
+SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(configuration);
 ```
 
 ## 构建SqlSession
 
-构建完了SqlSessionFactory之后我们就可以构建SqlSession了，可以进行数据库的查询操作了。
+通过SqlSessionFactory创建SqlSession进行管理数据库连接和管理事务,采用以下代码示例创建SqlSession无需手动关闭连接。
 
 ```java
-public class BuildSqlSessionTest {
-
-    @Test
-    public void testBuildSqlSessionFactoryByXml() throws IOException {
-        BuildSqlSessionFactoryByXml sqlSessionFactory = new BuildSqlSessionFactoryByXml();
-        try (SqlSession sqlSession = sqlSessionFactory.getSqlSessionFactory().openSession()){
-            BlogMapper mapper = sqlSession.getMapper(BlogMapper.class);
-            Blog blog = mapper.selectBlog(1);
-            System.out.println(blog.toString());
-        }
-    }
-
-    @Test
-    public void testBuildSqlSessionFactoryByConfig() throws IOException {
-        BuildSqlSessionFactoryByConfig sqlSessionFactory = new BuildSqlSessionFactoryByConfig();
-        try (SqlSession sqlSession = sqlSessionFactory.getSqlSessionFactory().openSession()){
-            BlogMapper mapper = sqlSession.getMapper(BlogMapper.class);
-            Blog blog = mapper.selectBlog(1);
-            System.out.println(blog.toString());
-        }
-
-    }
+try (SqlSession sqlSession = sqlSessionFactory.getSqlSessionFactoryByXml().openSession()){
+	//todo 业务代码
+    // 提交事务
+    sqlSession.commit();
+}catch (Exception e) {
+    // 捕获异常，回滚事务
+    sqlSession.rollback();
+    //处理异常
 }
 ```
 
-构建SqlSessionFactory可以使用两种方式，但是当他们作用于同一个Mapper接口的时候会冲突，目前有三种构建SqlSessionFactory的方式，纯读取mybatis-config.xml、纯读取Configuration、两种混合使用构建，由于Java注解的限制，一些复杂的sql不好实现，一般实际采用的是，配置文件+配置类+映射文件+注解的方式使用。
+> 构建SqlSessionFactory有三种方式：
+>
+> 1. 纯读取mybatis-config.xml
+> 2. 纯读取Configuration
+> 3. 两种混合使用构建[由于Java注解的限制，一些复杂的sql不好实现，实际采用的是，配置文件+配置类+映射文件+注解的方式使用]
+
+SqlSessionFactory创建SqlSession实例6种方法：
+
+- **事务处理**：如何实现自动提交或者手动提交？
+- **数据库连接**：如何使用其他自定义的数据源？
+- **语句执行**：如何复用PreparedStatement执行语句或批量更新语句（包括插入语句和删除语句）？
+
+基于以上需求，有下列已重载的多个 openSession() 方法供使用。
+
+```java
+SqlSession openSession(boolean autoCommit)
+SqlSession openSession(Connection connection)
+SqlSession openSession(TransactionIsolationLevel level)
+SqlSession openSession(ExecutorType execType, TransactionIsolationLevel level)
+SqlSession openSession(ExecutorType execType, boolean autoCommit)
+SqlSession openSession(ExecutorType execType, Connection connection)
+```
+
+默认的 openSession() 方法没有参数：
+
+- 事务作用域将会开启（也就是不自动提交，如果未调用 `commit` 方法，`SqlSession` 关闭时 MyBatis 会自动回滚事务。）。
+- 将由当前环境配置的 DataSource 实例中获取 Connection 对象。
+- 事务隔离级别将会使用驱动或数据源的默认设置。
+- 预处理语句不会被复用，也不会批量处理更新。
+
+`ExecutorType` 这个枚举类型定义了三个值:
+
+- `ExecutorType.SIMPLE`：为每个语句的执行创建一个新的预处理语句。
+- `ExecutorType.REUSE`：该类型的执行器会复用预处理语句。
+- `ExecutorType.BATCH`：该类型的执行器会批量执行所有更新语句，如果 SELECT 在多个更新中间执行，将在必要时将多条更新语句分隔开来，以方便理解。
+
+**立即批量更新方法**
+
+当你将 `ExecutorType` 设置为 `ExecutorType.BATCH` 时，可以使用这个方法清除（执行）缓存在 JDBC 驱动类中的批量更新语句。
+
+```
+if (count % batchSize == 0) {
+     sqlSession.flushStatements(); // 手动刷新缓存中的 SQL 语句
+     sqlSession.clearCache(); // 清空缓存，防止内存溢出
+}
+```
 
 ## 作用域和生命周期
 
@@ -184,24 +163,44 @@ public class BuildSqlSessionTest {
 
 创建完了就一直存在，每次使用都拿去创建SqlSession对象，作用域是应用作用域，应该使用单例模式或者静态单例模式。
 
+```java
+public class MyBatisSessionFactory {
+    private static final SqlSessionFactory sqlSessionFactory;
+    static {
+        // 1. 加载 MyBatis 配置文件
+        String resource = "mybatis-config.xml";
+        InputStream inputStream = MyBatisSessionFactory.class.getClassLoader().getResourceAsStream(resource);
+        // 2. 构建 SqlSessionFactory
+        sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
+    }
+    // 私有构造方法，防止外部实例化
+    private MyBatisSessionFactory() {
+    }
+    // 获取 SqlSessionFactory 的静态方法
+    public static SqlSessionFactory getSqlSessionFactory() {
+        return sqlSessionFactory;
+    }
+}
+```
+
 ### SqlSession
 
-每个现成都有自己的sqlSession,SqlSession不是线程安全的，不能被共享，作用域是方法作用域，每次操作完就自动关闭，下面是最佳实践。
+每个现成都有自己的sqlSession,SqlSession不是线程安全的，不能被共享，作用域是方法作用域，每次操作完就自动关闭。
 
 ```java
 try (SqlSession session = sqlSessionFactory.openSession()) {
-  // 你的应用逻辑代码
+  // todo
 }
 ```
 
 ### Mapper
 
-映射器是用来绑定映射语句的接口，映射器的实例是从SqlSession中获取的，使用完即可关闭，最佳实践是放在方法中。
+映射器是用来绑定映射语句的接口，映射器的实例是从SqlSession中获取的，使用完即可关闭，作用域是方法作用域。
 
 ```java
 try (SqlSession session = sqlSessionFactory.openSession()) {
   BlogMapper mapper = session.getMapper(BlogMapper.class);
-  // 你的应用逻辑代码
+  // todo
 }
 ```
 
@@ -267,7 +266,7 @@ SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(input
 
 ### 属性优先级
 
-构建SqlSessionFactor加载属性 > 加载外部配置文件 > 在properties元素体内指定的属性
+构建SqlSessionFactory传入的属性 > 加载外部配置文件的属性 > 在mybatis-config.xml中properties元素体内指定的属性
 
 ## 设置
 
@@ -454,89 +453,158 @@ public class StringListTypeHandler extends BaseTypeHandler<List<String>> {
 
 ## 对象工厂
 
-每次 MyBatis 创建结果对象的新实例时，它都会使用一个对象工厂（ObjectFactory）实例来完成实例化工作。 默认的对象工厂需要做的仅仅是实例化目标类，要么通过默认无参构造方法，要么通过存在的参数映射来调用带有参数的构造方法。 如果想覆盖对象工厂的默认行为，可以通过创建自己的对象工厂来实现。比如：
+>在 MyBatis 中，对象工厂（ObjectFactory）负责实例化所有映射的对象。它主要用于创建从数据库返回的结果对象。
+
+### 默认对象工厂
+
+默认情况下，MyBatis 使用 `DefaultObjectFactory` 来创建结果对象。这对于大多数情况已经足够了。
+
+### 自定义对象工厂
+
+通过实现 `ObjectFactory` 接口来自定义对象工厂。假设我们有一个 `User` 类，我们希望在创建 `User` 对象时自动设置一个默认的状态字段。
+
+**1. User类**
 
 ```java
-// ExampleObjectFactory.java
-public class ExampleObjectFactory extends DefaultObjectFactory {
-  @Override
-  public <T> T create(Class<T> type) {
-    return super.create(type);
-  }
-
-  @Override
-  public <T> T create(Class<T> type, List<Class<?>> constructorArgTypes, List<Object> constructorArgs) {
-    return super.create(type, constructorArgTypes, constructorArgs);
-  }
-
-  @Override
-  public void setProperties(Properties properties) {
-    super.setProperties(properties);
-  }
-
-  @Override
-  public <T> boolean isCollection(Class<T> type) {
-    return Collection.class.isAssignableFrom(type);
-  }}
+@Data
+public class ObjectFactoryUser implements Serializable {
+    private int id;
+    private String name;
+    private String status;
+}
 ```
+
+**2. 自定义对象工厂，给ObjectFactoryUser设置默认的状态为 "active"。**
+
+```java
+public class CustomObjectFactory extends DefaultObjectFactory {
+
+    @Override
+    public <T> T create(Class<T> type) {
+        T instance = super.create(type);
+        initialize(instance);
+        return instance;
+    }
+
+    @Override
+    public <T> T create(Class<T> type, List<Class<?>> constructorArgTypes, List<Object> constructorArgs) {
+        T instance = super.create(type, constructorArgTypes, constructorArgs);
+        initialize(instance);
+        return instance;
+    }
+
+    @Override
+    public void setProperties(Properties properties) {
+        super.setProperties(properties);
+    }
+
+    private <T> void initialize(T instance) {
+        if (instance instanceof User) {
+            ((User) instance).setStatus("active");
+        }
+    }
+}
+
+```
+
+**3. 配置自定义对象工厂**
 
 ```xml
 <!-- mybatis-config.xml -->
-<objectFactory type="org.mybatis.example.ExampleObjectFactory">
-  <property name="someProperty" value="100"/>
-</objectFactory>
+<configuration>
+    <!-- 其他配置 -->
+    <objectFactory type="com.example.CustomObjectFactory"/>
+</configuration>
 ```
 
-ObjectFactory 接口很简单，它包含两个创建实例用的方法，一个是处理默认无参构造方法的，另外一个是处理带参数的构造方法的。 另外，setProperties 方法可以被用来配置 ObjectFactory，在初始化你的 ObjectFactory 实例后， objectFactory 元素体中定义的属性会被传递给 setProperties 方法。
+当 `ObjectFactoryUser` 对象通过MyBatis查询创建时，自定义的对象工厂会自动将`status` 字段设置为 "active"。输出结果应显示用户的状态为 "active"。
+
+**作用：**
+
+1. **创建结果对象**：当 MyBatis 从数据库返回结果集时，使用对象工厂创建结果对象实例。
+
+2. **对象初始化**：可以在对象创建时进行一些自定义的初始化工作，比如依赖注入、默认值设置等。
+
+3. **构造函数选择**：可以选择使用特定的构造函数来创建对象，满足特殊的对象创建需求。
 
 ## 插件
 
-MyBatis 允许你在映射语句执行过程中的某一点进行拦截调用。默认情况下，MyBatis 允许使用插件来拦截的方法调用包括：
+### 开发步骤
 
-- Executor (update, query, flushStatements, commit, rollback, getTransaction, close, isClosed)
-- ParameterHandler (getParameterObject, setParameters)
-- ResultSetHandler (handleResultSets, handleOutputParameters)
-- StatementHandler (prepare, parameterize, batch, update, query)
+1. **实现 Interceptor 接口**：创建一个类实现 MyBatis 提供的 `Interceptor` 接口。
+2. **注入插件**：在 MyBatis 配置文件中注入插件。
+3. **配置插件**：在插件类中配置需要拦截的方法和自定义逻辑。
 
-这些类中方法的细节可以通过查看每个方法的签名来发现，或者直接查看 MyBatis 发行包中的源代码。 如果你想做的不仅仅是监控方法的调用，那么你最好相当了解要重写的方法的行为。 因为在试图修改或重写已有方法的行为时，很可能会破坏 MyBatis 的核心模块。 这些都是更底层的类和方法，所以使用插件的时候要特别当心。
+### 插件原理
 
-通过 MyBatis 提供的强大机制，使用插件是非常简单的，只需实现 Interceptor 接口，并指定想要拦截的方法签名即可。
+MyBatis 插件通过拦截器机制，在执行 SQL 语句的四个主要方法前后进行拦截：
 
-```
-// ExamplePlugin.java
-@Intercepts({@Signature(
-  type= Executor.class,
-  method = "update",
-  args = {MappedStatement.class,Object.class})})
-public class ExamplePlugin implements Interceptor {
-  private Properties properties = new Properties();
+- `Executor`：执行增删改查操作的方法。
+- `ParameterHandler`：处理参数的方法。
+- `ResultSetHandler`：处理结果集的方法。
+- `StatementHandler`：处理 SQL 语句的方法。
 
-  @Override
-  public Object intercept(Invocation invocation) throws Throwable {
-    // implement pre processing if need
-    Object returnObject = invocation.proceed();
-    // implement post processing if need
-    return returnObject;
-  }
+通过拦截这些方法，可以在执行 SQL 语句前后进行自定义操作。
 
-  @Override
-  public void setProperties(Properties properties) {
-    this.properties = properties;
-  }
+### 插件示例
+
+```java
+@Intercepts({
+        @Signature(type = StatementHandler.class, method = "prepare", args = {Connection.class, Integer.class})
+})
+public class SqlExecutionTimeInterceptor implements Interceptor {
+
+    private static final Logger logger = LoggerFactory.getLogger(SqlExecutionTimeInterceptor.class);
+
+    @Override
+    public Object intercept(Invocation invocation) throws Throwable {
+        long startTime = System.currentTimeMillis();
+
+        // 执行被拦截的方法
+        Object result = invocation.proceed();
+
+        long endTime = System.currentTimeMillis();
+        logger.info("SQL execution took " + (endTime - startTime) + " ms");
+
+
+        return result;
+    }
+
+    @Override
+    public Object plugin(Object target) {
+        // 创建目标对象的代理
+        return Plugin.wrap(target, this);
+    }
+
+    @Override
+    public void setProperties(Properties properties) {
+        // 读取插件配置的属性
+    }
 }
-<!-- mybatis-config.xml -->
-<plugins>
-  <plugin interceptor="org.mybatis.example.ExamplePlugin">
-    <property name="someProperty" value="100"/>
-  </plugin>
-</plugins>
 ```
 
-上面的插件将会拦截在 Executor 实例中所有的 “update” 方法调用， 这里的 Executor 是负责执行底层映射语句的内部对象。
+**注入插件**
 
-**覆盖配置类**
+```xml
+ <plugins>
+        <plugin interceptor="com.tutorial.mybatis.plugin.SqlExecutionTimeInterceptor">
+        </plugin>
+ </plugins>
+```
 
-除了用插件来修改 MyBatis 核心行为以外，还可以通过完全覆盖配置类来达到目的。只需继承配置类后覆盖其中的某个方法，再把它传递到 SqlSessionFactoryBuilder.build(myConfig) 方法即可。再次重申，这可能会极大影响 MyBatis 的行为，务请慎之又慎。
+### 插件配置说明
+
+- `@Intercepts` 注解：用于定义插件要拦截的方法。
+- `@Signature` 注解：用于指定要拦截的类、方法和参数类型。
+- `intercept` 方法：插件的核心逻辑，拦截目标方法并执行自定义操作。
+- `plugin` 方法：用于创建插件的代理对象。
+- `setProperties` 方法：用于设置插件的属性。
+
+### 插件开发原理
+
+- **拦截器机制**：MyBatis 插件通过拦截器机制，在执行 SQL 语句的四个主要方法前后进行拦截。通过 `@Intercepts` 和 `@Signature` 注解，可以指定要拦截的类、方法和参数类型。
+- **代理模式**：MyBatis 插件使用代理模式，通过 `Plugin.wrap` 方法创建目标对象的代理对象。在代理对象中，可以在执行目标方法前后进行自定义操作。
+- **反射机制**：在 `intercept` 方法中，可以通过反射机制获取目标对象和方法参数，从而实现自定义操作。
 
 ## 环境配置
 
@@ -588,7 +656,7 @@ public SqlSessionFactory getSqlSessionFactory() throws IOException {
         InputStream inputStream = Resources.getResourceAsStream(resource);
         SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream,"{environment id}");
         return sqlSessionFactory;
-    }
+}
 ```
 
 ## 事务管理器
@@ -1298,252 +1366,236 @@ public void testIfLabel() throws IOException {
 
 ## `<choose>`、`<when>` 和 `<otherwise>` 标签
 
-`<choose>` 标签用于实现类似于 Java 中的 `switch` 语句的功能，`<when>` 和 `<otherwise>` 标签用于定义条件分支。
+`<choose>` 标签用于实现类似于 Java 中的 `switch` 语句的功能，`<when>` 和 `<otherwise>` 标签用于定义条件分支。根据不通条件查询用户
+
+```xml
+<select id="selectUserByIdOrName" resultMap="UserResultMap">
+        SELECT u.id, u.name, a.id AS address_id, a.street, a.city
+        FROM User u
+        LEFT JOIN Address a ON u.address_id = a.id
+        WHERE 1 = 1
+        <choose>
+            <when test="id != null">
+                and u.id = #{id}
+            </when>
+            <when test="name != null">
+                and u.name = #{name}
+            </when>
+            <otherwise>
+                and 1 = 0
+            </otherwise>
+        </choose>
+</select>
+```
+
+```java
+@Test
+    public void testChoiceLabel() throws IOException {
+        BuildSqlSessionFactoryByXml sqlSessionFactory = new BuildSqlSessionFactoryByXml();
+        try (SqlSession sqlSession = sqlSessionFactory.getSqlSessionFactory().openSession()){
+            UserMapper mapper = sqlSession.getMapper(UserMapper.class);
+            User user1 = mapper.selectUserByIdOrName(1,"John Doe");
+            System.out.println(user1.toString());
+            User user2 = mapper.selectUserByIdOrName(null,null);
+            System.out.println(user2 == null ? true : false);
+        }
+}
+```
 
 
 
 ## `<trim>`、`<where>` 和 `<set>` 标签
 
+- `<trim>` 标签用于去除多余的前缀或后缀。
+- `<where>` 标签用于自动处理 `WHERE` 子句中的条件。
+- `<set>` 标签用于自动处理 `UPDATE` 语句中的 `SET` 子句。
+
+有一个 `Food` 表，希望根据不同的条件动态查询和更新食物信息。
+
+```xml
+<select id="selectFood" resultType="com.tutorial.mybatis.pojo.Food">
+        SELECT id, name, category, price, available
+        FROM foods
+        <where>
+            <trim prefixOverrides="AND | OR">
+
+                <if test="name != null and name != ''">
+                     OR AND name = #{name}  <!-- OR AND trim前缀标签会去除掉 -->
+                </if>
+                <if test="category != null and category != ''">
+                    AND category = #{category}
+                </if>
+                <if test="price != null and price != ''">
+                    AND price = #{price}
+                </if>
+                <if test="available != null and available != ''">
+                    AND available = #{available}
+                </if>
+            </trim>
+        </where>
+    </select>
+
+    <!-- 动态更新食物信息 -->
+    <update id="updateFood">
+        UPDATE foods
+        <set>
+            <trim suffixOverrides=",">
+                <if test="name != null">
+                    name = #{name},
+                </if>
+                <if test="category != null">
+                    category = #{category},
+                </if>
+                <if test="price != null">
+                    price = #{price},
+                </if>
+                <if test="available != null">
+                    available = #{available},, <!-- ,, trim后缀标签会去除掉 -->
+                </if>
+            </trim>
+        </set>
+        WHERE id = #{id}
+    </update>
+```
+
+1. `<trim>` 标签用于去除多余的前缀或后缀。
+2. `<where>` 标签自动处理 `WHERE` 子句中的条件。如果没有任何条件，它会去掉多余的 `WHERE` 关键字。
+3. `<set>` 标签用于自动处理 `UPDATE` 语句中的 `SET` 子句。
+
 ## `<foreach>` 标签
 
+`<foreach>` 标签用于遍历集合，并生成相应的 SQL 片段。例如查询指定集合id的食物。
 
+```xml
+<select id="selectFoodListById" resultType="com.tutorial.mybatis.pojo.Food">
+        SELECT id, name, category, price, available
+        FROM foods
+        where id in 
+        <foreach item="id" index="index" collection="listId" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+</select>
+```
 
+- collection="list"：指定要遍历的集合是 `list`。使用@param注解指定
+- item="id"：指定集合中每个元素的变量名为 `id`。
+- index="index"：指定集合中每个元素的索引变量名为 `index`（可选）。
+- open="("：指定生成的 SQL 片段的开头部分为 `(`。
+- close=")"：指定生成的 SQL 片段的结尾部分为 `)`。
+- separator=","：指定生成的 SQL 片段中每个元素之间的分隔符为 `,`。
 
+```java
+@Test
+public void testForeachLabel() throws IOException {
+        BuildSqlSessionFactoryByXml sqlSessionFactory = new BuildSqlSessionFactoryByXml();
+        try (SqlSession sqlSession = sqlSessionFactory.getSqlSessionFactory().openSession()){
+            FoodMapper mapper = sqlSession.getMapper(FoodMapper.class);
+            List<Food> apple = mapper.selectFoodListById(Arrays.asList(1,2,3,4,5,6));
+            apple.forEach(System.out::println);
+        }
+ }
+```
+
+# SQL语句构建器
+
+Java 程序员面对的最痛苦的事情之一就是在 Java 代码中嵌入 SQL 语句。这通常是因为需要动态生成 SQL 语句，不然我们可以将它们放到外部文件或者存储过程中。如你所见，MyBatis 在 XML 映射中具备强大的 SQL 动态生成能力。但有时，我们还是需要在 Java 代码里构建 SQL 语句。此时，MyBatis 有另外一个特性可以帮到你，让你从处理典型问题中解放出来，比如加号、引号、换行、格式化问题、嵌入条件的逗号管理及 AND 连接。确实，在 Java 代码中动态生成 SQL 代码真的就是一场噩梦。例如：
+
+```java
+String sql = "SELECT P.ID, P.USERNAME, P.PASSWORD, P.FULL_NAME, "
+"P.LAST_NAME,P.CREATED_ON, P.UPDATED_ON " +
+"FROM PERSON P, ACCOUNT A " +
+"INNER JOIN DEPARTMENT D on D.ID = P.DEPARTMENT_ID " +
+"INNER JOIN COMPANY C on D.COMPANY_ID = C.ID " +
+"WHERE (P.ID = A.ID AND P.FIRST_NAME like ?) " +
+"OR (P.LAST_NAME like ?) " +
+"GROUP BY P.ID " +
+"HAVING (P.LAST_NAME like ?) " +
+"OR (P.FIRST_NAME like ?) " +
+"ORDER BY P.ID, P.FULL_NAME";
+```
+
+## 解决方案
+
+MyBatis 3 提供了方便的工具类来帮助解决此问题。借助 SQL 类，我们只需要简单地创建一个实例，并调用它的方法即可生成 SQL 语句。让我们来用 SQL 类重写上面的例子：
+
+```java
+private String selectPersonSql() {
+  return new SQL() {{
+    SELECT("P.ID, P.USERNAME, P.PASSWORD, P.FULL_NAME");
+    SELECT("P.LAST_NAME, P.CREATED_ON, P.UPDATED_ON");
+    FROM("PERSON P");
+    FROM("ACCOUNT A");
+    INNER_JOIN("DEPARTMENT D on D.ID = P.DEPARTMENT_ID");
+    INNER_JOIN("COMPANY C on D.COMPANY_ID = C.ID");
+    WHERE("P.ID = A.ID");
+    WHERE("P.FIRST_NAME like ?");
+    OR();
+    WHERE("P.LAST_NAME like ?");
+    GROUP_BY("P.ID");
+    HAVING("P.LAST_NAME like ?");
+    OR();
+    HAVING("P.FIRST_NAME like ?");
+    ORDER_BY("P.ID");
+    ORDER_BY("P.FULL_NAME");
+  }}.toString();
+}
+```
 
 
 
 # 日志
 
-Mybatis 通过使用内置的日志工厂提供日志功能。内置日志工厂将会把日志工作委托给下面的实现之一：
+## 日志架构
 
-- SLF4J
-- Apache Commons Logging
-- Log4j 2
-- Log4j（3.5.9起废弃）
-- JDK logging
+Mybatis内置了slf4j日志门面，我们采用slf4j+logback的架构
 
-MyBatis 内置日志工厂基于运行时自省机制选择合适的日志工具。它会使用第一个查找得到的工具（按上文列举的顺序查找）。如果一个都未找到，日志功能就会被禁用。
+## 导入依赖
 
-不少应用服务器（如 Tomcat 和 WebShpere）的类路径中已经包含 Commons Logging，所以在这种配置环境下的 MyBatis 会把它作为日志工具，记住这点非常重要。这将意味着，在诸如 WebSphere 的环境中，它提供了 Commons Logging 的私有实现，你的 Log4J 配置将被忽略。MyBatis 将你的 Log4J 配置忽略掉是相当令人郁闷的（事实上，正是因为在这种配置环境下，MyBatis 才会选择使用 Commons Logging 而不是 Log4J）。如果你的应用部署在一个类路径已经包含 Commons Logging 的环境中，而你又想使用其它日志工具，你可以通过在 MyBatis 配置文件 mybatis-config.xml 里面添加一项 setting 来选择别的日志工具。
-
-```xml
-<configuration>
-  <settings>
-    ...
-    <setting name="logImpl" value="LOG4J"/>
-    ...
-  </settings>
-</configuration>
+```pom.xml
+<!-- pom.xml -->
+<!-- SLF4J API -->
+<dependency>
+    <groupId>org.slf4j</groupId>
+    <artifactId>slf4j-api</artifactId>
+    <version>1.7.30</version>
+</dependency>
+<!-- Logback Classic -->
+<dependency>
+     <groupId>ch.qos.logback</groupId>
+     <artifactId>logback-classic</artifactId>
+     <version>1.2.3</version>
+</dependency>
 ```
 
-logImpl 可选的值有：SLF4J、LOG4J、LOG4J2、JDK_LOGGING、COMMONS_LOGGING、STDOUT_LOGGING、NO_LOGGING，或者是实现了接口 `org.apache.ibatis.logging.Log` 的，且构造方法是以字符串为参数的类的完全限定名。（译者注：可以参考org.apache.ibatis.logging.slf4j.Slf4jImpl.java的实现）
+## 开启配置
 
-你也可以调用如下任一方法来使用日志工具：
-
-```java
-org.apache.ibatis.logging.LogFactory.useSlf4jLogging();
-org.apache.ibatis.logging.LogFactory.useLog4JLogging();
-org.apache.ibatis.logging.LogFactory.useLog4J2Logging();
-org.apache.ibatis.logging.LogFactory.useJdkLogging();
-org.apache.ibatis.logging.LogFactory.useCommonsLogging();
-org.apache.ibatis.logging.LogFactory.useStdOutLogging();
+```mybatis.xml
+<!-- mybatis.xml 开启日志配置 -->
+<settings>
+	<setting name="logImpl" value="SLF4J"/>
+</settings>
 ```
-
-如果你决定要调用以上某个方法，请在调用其它 MyBatis 方法之前调用它。另外，仅当运行时类路径中存在该日志工具时，调用与该日志工具对应的方法才会生效，否则 MyBatis 一概忽略。如你环境中并不存在 Log4J2，你却调用了相应的方法，MyBatis 就会忽略这一调用，转而以默认的查找顺序查找日志工具。
-
-关于 SLF4J、Apache Commons Logging、Apache Log4J 和 JDK Logging 的 API 介绍不在本文档介绍范围内。不过，下面的例子可以作为一个快速入门。关于这些日志框架的更多信息，可以参考以下链接：
-
-- [SLF4J](https://www.slf4j.org/)
-- [Apache Commons Logging](https://commons.apache.org/proper/commons-logging/)
-- [Apache Log4j 2.x](https://logging.apache.org/log4j/2.x/)
-- [JDK Logging API](https://docs.oracle.com/javase/8/docs/technotes/guides/logging/overview.html)
 
 ## 日志配置
 
-你可以对包、映射类的全限定名、命名空间或全限定语句名开启日志功能来查看 MyBatis 的日志语句。
-
-再次说明下，具体怎么做，由使用的日志工具决定，这里以 SLF4J(Logback) 为例。配置日志功能非常简单：添加一个或多个配置文件（如 `logback.xml`），有时需要添加 jar 包。下面的例子将使用 SLF4J(Logback) 来配置完整的日志服务，共两个步骤：
-
-### 步骤 1：添加 SLF4J + Logback 的 jar 包
-
-因为我们使用的是 SLF4J(Logback)，就要确保它的 jar 包在应用中是可用的。要启用 SLF4J(Logback)，只要将 jar 包添加到应用的类路径中即可。SLF4J(Logback) 的 jar 包可以在上面的链接中下载。
-
-对于 web 应用或企业级应用，则需要将 `logback-classic.jar`, `logback-core.jar` and `slf4j-api.jar` 添加到 `WEB-INF/lib` 目录下；对于独立应用，可以将它添加到JVM 的 `-classpath` 启动参数中。
-
-如果你使用 maven, 你可以通过在 `pom.xml` 中添加下面的依赖来下载 jar 文件。
-
-```xml
-<dependency>
-  <groupId>ch.qos.logback</groupId>
-  <artifactId>logback-classic</artifactId>
-  <version>1.x.x</version>
-</dependency>
-```
-
-### 步骤 2：配置 Logback
-
-配置 Logback 比较简单，假如你需要记录这个映射器接口的日志：
-
-```java
-package org.mybatis.example;
-public interface BlogMapper {
-  @Select("SELECT * FROM blog WHERE id = #{id}")
-  Blog selectBlog(int id);
-}
-```
-
-在应用的类路径中创建一个名称为 `logback.xml` 的文件，文件的具体内容如下：
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE configuration>
+```logback.xml
+<!-- src/main/resources/logback.xml 控制台日志-->
 <configuration>
-
-  <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
-    <encoder>
-      <pattern>%5level [%thread] - %msg%n</pattern>
-    </encoder>
-  </appender>
-
-  <logger name="org.mybatis.example.BlogMapper">
-    <level value="trace"/>
-  </logger>
-  <root level="error">
-    <appender-ref ref="stdout"/>
-  </root>
-
+    <!-- Console Appender -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    
+    <!-- Root Logger -->
+    <root level="debug">
+        <appender-ref ref="STDOUT" />
+    </root>
+    <!-- MyBatis Logger -->
+    <logger name="com.tutorial.mybatis" level="debug" />
 </configuration>
 ```
-
-添加以上配置后，SLF4J(Logback) 就会记录 `org.mybatis.example.BlogMapper` 的详细执行操作，且仅记录应用中其它类的错误信息（若有）。
-
-你也可以将日志的记录方式从接口级别切换到语句级别，从而实现更细粒度的控制。如下配置只对 `selectBlog` 语句记录日志：
-
-```xml
-<logger name="org.mybatis.example.BlogMapper.selectBlog">
-  <level value="trace"/>
-</logger>
-```
-
-与此相对，可以对一组映射器接口记录日志，只要对映射器接口所在的包开启日志功能即可：
-
-```xml
-<logger name="org.mybatis.example">
-  <level value="trace"/>
-</logger>
-```
-
-某些查询可能会返回庞大的结果集，此时只想记录其执行的 SQL 语句而不想记录结果该怎么办？为此，Mybatis 中 SQL 语句的日志级别被设为DEBUG（JDK 日志设为 FINE），结果的日志级别为 TRACE（JDK 日志设为 FINER)。所以，只要将日志级别调整为 DEBUG 即可达到目的：
-
-```xml
-<logger name="org.mybatis.example">
-  <level value="debug"/>
-</logger>
-```
-
-要记录日志的是类似下面的映射器文件而不是映射器接口又该怎么做呢？
-
-```xml
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper
-  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="org.mybatis.example.BlogMapper">
-  <select id="selectBlog" resultType="Blog">
-    select * from Blog where id = #{id}
-  </select>
-</mapper>
-```
-
-如需对 XML 文件记录日志，只要对命名空间增加日志记录功能即可：
-
-```xml
-<logger name="org.mybatis.example.BlogMapper">
-  <level value="trace"/>
-</logger>
-```
-
-要记录具体语句的日志可以这样做：
-
-```xml
-<logger name="org.mybatis.example.BlogMapper.selectBlog">
-  <level value="trace"/>
-</logger>
-```
-
-你应该注意到了，为映射器接口和 XML 文件添加日志功能的语句毫无差别。
-
-**注意** 如果你使用的是 SLF4J 或 Log4j 2，MyBatis 将以 `MYBATIS` 这个值进行调用。
-
-配置文件 `log4j.properties` 的余下内容是针对日志输出源的，这一内容已经超出本文档范围。关于 Logback 的更多内容，可以参考[Logback](https://logback.qos.ch/) 的网站。不过，你也可以简单地做做实验，看看不同的配置会产生怎样的效果。
-
-### Log4j 2 配置示例
-
-```xml
-<!-- pom.xml -->
-<dependency>
-  <groupId>org.apache.logging.log4j</groupId>
-  <artifactId>log4j-core</artifactId>
-  <version>2.x.x</version>
-</dependency>
-<!-- log4j2.xml -->
-<?xml version="1.0" encoding="UTF-8"?>
-<Configuration xmlns="http://logging.apache.org/log4j/2.0/config">
-
-  <Appenders>
-    <Console name="stdout" target="SYSTEM_OUT">
-      <PatternLayout pattern="%5level [%t] - %msg%n"/>
-    </Console>
-  </Appenders>
-
-  <Loggers>
-    <Logger name="org.mybatis.example.BlogMapper" level="trace"/>
-    <Root level="error" >
-      <AppenderRef ref="stdout"/>
-    </Root>
-  </Loggers>
-
-</Configuration>
-```
-
-### Log4j 配置示例
-
-```xml
-<!-- pom.xml -->
-<dependency>
-  <groupId>log4j</groupId>
-  <artifactId>log4j</artifactId>
-  <version>1.2.17</version>
-</dependency>
-# log4j.properties
-log4j.rootLogger=ERROR, stdout
-
-log4j.logger.org.mybatis.example.BlogMapper=TRACE
-
-log4j.appender.stdout=org.apache.log4j.ConsoleAppender
-log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
-log4j.appender.stdout.layout.ConversionPattern=%5p [%t] - %m%n
-```
-
-### JDK logging 配置示例
-
-```properties
-# logging.properties
-handlers=java.util.logging.ConsoleHandler
-.level=SEVERE
-
-org.mybatis.example.BlogMapper=FINER
-
-java.util.logging.ConsoleHandler.level=ALL
-java.util.logging.ConsoleHandler.formatter=java.util.logging.SimpleFormatter
-java.util.logging.SimpleFormatter.format=%1$tT.%1$tL %4$s %3$s - %5$s%6$s%n
-```
-
-
-
-
-
-
 
 
 
