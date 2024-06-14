@@ -1,5 +1,7 @@
 package com.tutorial.mybatis.factory;
 
+import com.tutorial.mybatis.mapper.BlogMapper;
+import com.tutorial.mybatis.mapper.UserMapper;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.ibatis.io.Resources;
@@ -55,8 +57,12 @@ public class BuildSqlSessionFactory {
         TransactionFactory transactionFactory = new JdbcTransactionFactory();
         Environment environment = new Environment("development", transactionFactory, dataSource);
         Configuration configuration = new Configuration(environment);
-        configuration.addMappers("com.tutorial.mybatis.mapper");
+        //configuration.addMappers("com.tutorial.mybatis.mapper");
+        configuration.addMapper(BlogMapper.class);
         SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(configuration);
         return sqlSessionFactory;
     }
+
+
+
 }

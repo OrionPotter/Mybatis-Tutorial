@@ -33,7 +33,7 @@ public class TestBuildSqlSessionFactoryAndSqlSession {
         BuildSqlSessionFactory sqlSessionFactory = new BuildSqlSessionFactory();
         try (SqlSession sqlSession = sqlSessionFactory.getSqlSessionFactoryByConfig().openSession()){
             BlogMapper mapper = sqlSession.getMapper(BlogMapper.class);
-            Blog blog = mapper.selectBlog(1);
+            Blog blog = mapper.SelectById(1);
             System.out.println(blog.toString());
         }
 

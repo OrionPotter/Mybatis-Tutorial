@@ -4,7 +4,7 @@
         "https://mybatis.org/dtd/mybatis-3-config.dtd">
 <configuration>
 
-    <properties resource="./jdbc.properties"></properties>
+    <properties resource="./jdbc.properties"/>
 
     <settings>
         <setting name="logImpl" value="SLF4J"/>
@@ -22,10 +22,19 @@
             <!-- <property name="propertyName" value="propertyValue"/> -->
         </plugin>
 
+        <!-- 配置 PageHelper 插件 -->
         <plugin interceptor="com.github.pagehelper.PageInterceptor">
+            <!-- 指定数据库方言，这里设置为 MySQL -->
             <property name="helperDialect" value="mysql"/>
+            <!-- 启用分页参数合理化 -->
+            <!-- 当页码参数小于 1 时，会自动调整为 1 -->
+            <!-- 当页码大于最大页数时，会自动调整为最大页数 -->
             <property name="reasonable" value="true"/>
+            <!-- 支持从方法参数中获取分页参数 -->
+            <!-- 允许在 Mapper 接口的方法参数中直接传递分页参数 -->
             <property name="supportMethodsArguments" value="true"/>
+            <!-- 配置额外的分页参数 -->
+            <!-- 使用 countSql 作为统计总记录数的 SQL 语句 -->
             <property name="params" value="count=countSql"/>
         </plugin>
     </plugins>
@@ -33,9 +42,9 @@
     <environments default="development">
         <environment id="development">
             <transactionManager type="JDBC"/>
-            <dataSource type="POOLED">
-            <property name="driver" value="${driver}"/>
-                <property name="url" value="${url}"/>
+            <dataSource type="com.tutorial.mybatis.factory.HikariCPDataSourceFactory">
+                <property name="driverClassName" value="${driver}"/>
+                <property name="jdbcUrl" value="${url}"/>
                 <property name="username" value="${username}"/>
                 <property name="password" value="${password}"/>
             </dataSource>

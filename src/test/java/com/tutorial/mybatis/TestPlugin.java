@@ -27,7 +27,6 @@ public class TestPlugin {
         BuildSqlSessionFactory sqlSessionFactory = new BuildSqlSessionFactory();
         try (SqlSession sqlSession = sqlSessionFactory.getSqlSessionFactoryByXml().openSession()){
             FoodMapper mapper = sqlSession.getMapper(FoodMapper.class);
-
             // 查询第一页，每页 2 条记录
             PageHelper.startPage(2, 2);
             Page<Food> foods = mapper.selectAllFood();

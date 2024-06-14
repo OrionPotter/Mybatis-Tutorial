@@ -565,8 +565,6 @@ public class SqlExecutionTimeInterceptor implements Interceptor {
 
         long endTime = System.currentTimeMillis();
         logger.info("SQL execution took " + (endTime - startTime) + " ms");
-
-
         return result;
     }
 
@@ -605,6 +603,70 @@ public class SqlExecutionTimeInterceptor implements Interceptor {
 - **拦截器机制**：MyBatis 插件通过拦截器机制，在执行 SQL 语句的四个主要方法前后进行拦截。通过 `@Intercepts` 和 `@Signature` 注解，可以指定要拦截的类、方法和参数类型。
 - **代理模式**：MyBatis 插件使用代理模式，通过 `Plugin.wrap` 方法创建目标对象的代理对象。在代理对象中，可以在执行目标方法前后进行自定义操作。
 - **反射机制**：在 `intercept` 方法中，可以通过反射机制获取目标对象和方法参数，从而实现自定义操作。
+
+### 分页插件
+
+**1. 导入分页插件依赖**
+
+```xml
+<!-- PageHelper 依赖 -->
+<dependency>
+    <groupId>com.github.pagehelper</groupId>
+    <artifactId>pagehelper</artifactId>
+    <version>5.3.1</version>
+</dependency>
+```
+
+**2. 注入插件**
+
+```xml
+<configuration>
+    <plugins>
+        <!-- 配置 PageHelper 插件 -->
+        <plugin interceptor="com.github.pagehelper.PageInterceptor">
+            <!-- 指定数据库方言，这里设置为 MySQL -->
+            <property name="helperDialect" value="mysql"/>
+            <!-- 启用分页参数合理化 -->
+            <!-- 当页码参数小于 1 时，会自动调整为 1 -->
+            <!-- 当页码大于最大页数时，会自动调整为最大页数 -->
+            <property name="reasonable" value="true"/>
+            <!-- 支持从方法参数中获取分页参数 -->
+            <!-- 允许在 Mapper 接口的方法参数中直接传递分页参数 -->
+            <property name="supportMethodsArguments" value="true"/>
+            <!-- 配置额外的分页参数 -->
+            <!-- 使用 countSql 作为统计总记录数的 SQL 语句 -->
+            <property name="params" value="count=countSql"/>
+        </plugin>
+    </plugins>
+</configuration>
+```
+
+**3. 测试分页插件**
+
+```java
+@Test
+public void testPlugin() throws IOException {
+        BuildSqlSessionFactory sqlSessionFactory = new BuildSqlSessionFactory();
+        try (SqlSession sqlSession = sqlSessionFactory.getSqlSessionFactoryByXml().openSession()){
+            FoodMapper mapper = sqlSession.getMapper(FoodMapper.class);
+            // 查询第一页，每页 2 条记录
+            PageHelper.startPage(2, 2);
+            Page<Food> foods = mapper.selectAllFood();
+            PageInfo<Food> pageInfo = new PageInfo<>(foods);
+
+            // 输出食物信息
+            List<Food> foodList = pageInfo.getList();
+            foodList.forEach(System.out::println);
+
+            // 输出分页信息
+            System.out.println("当前页: " + pageInfo.getPageNum());
+            System.out.println("每页的记录数: " + pageInfo.getPageSize());
+            System.out.println("总记录数: " + pageInfo.getTotal());
+            System.out.println("总页数: " + pageInfo.getPages());
+
+        }
+}
+```
 
 ## 环境配置
 
@@ -690,6 +752,55 @@ public SqlSessionFactory getSqlSessionFactory() throws IOException {
 **POOLED**– 这种数据源的实现利用“池”的概念将 JDBC 连接对象组织起来，避免了创建新的连接实例时所必需的初始化和认证时间。默认使用
 
 **JNDI** – 这个数据源实现是为了能在如 EJB 或应用服务器这类容器中使用，容器可以集中或在外部配置数据源，然后放置一个 JNDI 上下文的数据源引用。
+
+### 添加自定义数据源HikariCP
+
+**1. 导入依赖**
+
+```xml
+<!-- HikariCP -->
+<dependency>
+   <groupId>com.zaxxer</groupId>
+   <artifactId>HikariCP</artifactId>
+   <version>4.0.3</version>
+</dependency>
+```
+
+**2. 创建自定义的 HikariCP 数据源工厂**
+
+在 MyBatis 中使用 HikariCP 作为数据源时，创建自定义的 HikariCP 数据源工厂是为了满足 MyBatis 的数据源配置要求。MyBatis 期望的数据源配置类需要实现 `DataSourceFactory` 接口，而 HikariCP 本身并不直接实现这个接口。因此，我们需要创建一个自定义的工厂类来适配 HikariCP 数据源。
+
+```java
+public class HikariCPDataSourceFactory implements DataSourceFactory {
+    private Properties properties;
+
+    @Override
+    public void setProperties(Properties properties) {
+        this.properties = properties;
+    }
+
+    @Override
+    public DataSource getDataSource() {
+        HikariConfig config = new HikariConfig();
+        config.setDriverClassName(properties.getProperty("driverClassName"));
+        config.setJdbcUrl(properties.getProperty("jdbcUrl"));
+        config.setUsername(properties.getProperty("username"));
+        config.setPassword(properties.getProperty("password"));
+        return new HikariDataSource(config);
+    }
+}
+```
+
+**3. 配置 MyBatis 使用自定义的数据源工厂**
+
+```xml
+<dataSource type="com.tutorial.mybatis.factory.HikariCPDataSourceFactory">
+     <property name="driverClassName" value="${driver}"/>
+     <property name="jdbcUrl" value="${url}"/>
+     <property name="username" value="${username}"/>
+     <property name="password" value="${password}"/>
+</dataSource>
+```
 
 ## 数据库厂商
 
