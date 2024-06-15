@@ -840,34 +840,31 @@ public interface DatabaseIdProvider {
 ```xml
 <!-- 使用相对于类路径的资源引用 -->
 <mappers>
-  <mapper resource="org/mybatis/builder/AuthorMapper.xml"/>
-  <mapper resource="org/mybatis/builder/BlogMapper.xml"/>
-  <mapper resource="org/mybatis/builder/PostMapper.xml"/>
-</mappers>
-```
-
-```xml
-<!-- 使用完全限定资源定位符（URL） -->
-<mappers>
-  <mapper url="file:///var/mappers/AuthorMapper.xml"/>
-  <mapper url="file:///var/mappers/BlogMapper.xml"/>
-  <mapper url="file:///var/mappers/PostMapper.xml"/>
+        <mapper resource="com.tutorial.mybatis.mapper/BlogMapper.xml"/>
+        <mapper resource="com.tutorial.mybatis.mapper/UserMapper.xml"/>
+        <mapper resource="com.tutorial.mybatis.mapper/OrderMapper.xml"/>
+        <mapper resource="com.tutorial.mybatis.mapper/BookMapper.xml"/>
+        <mapper resource="com.tutorial.mybatis.mapper/AnimalMapper.xml"/>
+        <mapper resource="com.tutorial.mybatis.mapper/FoodMapper.xml"/>
 </mappers>
 ```
 
 ```xml
 <!-- 使用映射器接口实现类的完全限定类名 -->
-<mappers>
-  <mapper class="org.mybatis.builder.AuthorMapper"/>
-  <mapper class="org.mybatis.builder.BlogMapper"/>
-  <mapper class="org.mybatis.builder.PostMapper"/>
+ <mappers>
+        <mapper class="com.tutorial.mybatis.mapper.BlogMapper"/>
+        <mapper class="com.tutorial.mybatis.mapper.UserMapper"/>
+        <mapper class="com.tutorial.mybatis.mapper.OrderMapper"/>
+        <mapper class="com.tutorial.mybatis.mapper.BookMapper"/>
+        <mapper class="com.tutorial.mybatis.mapper.AnimalMapper"/>
+        <mapper class="com.tutorial.mybatis.mapper.FoodMapper"/>
 </mappers>
 ```
 
 ```xml
 <!-- 将包内的映射器接口全部注册为映射器 -->
 <mappers>
-  <package name="org.mybatis.builder"/>
+  <package name="com.tutorial.mybatis.mapper"/>
 </mappers>
 ```
 
@@ -1707,6 +1704,4 @@ Mybatis内置了slf4j日志门面，我们采用slf4j+logback的架构
     <logger name="com.tutorial.mybatis" level="debug" />
 </configuration>
 ```
-
-
 
